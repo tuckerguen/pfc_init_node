@@ -36,6 +36,12 @@ public:
         location(location), orientation(orientation) 
     {}
 
+    NeedlePose(cv::Point3d location, Eigen::Quaternionf q) :
+        location(location)
+    {
+        setOrientation(q);
+    }
+
     /**
      * @brief Default constructor (location=(0,0,0), orientation=(0,0,0))
      */

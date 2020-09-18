@@ -83,7 +83,7 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
                     // Store other match details
                     new_match.z = z;
                     // TODO: Check neg/pos direction for pitch/roll 
-                    new_match.yaw = a > 180 ? (a - 360) : -a;
+                    new_match.yaw = a > 180 ? (a - 360) : a;
                     new_match.pitch = b;
                     new_match.roll = y;
                     // Offset the origin to sit in the correct location of the final image

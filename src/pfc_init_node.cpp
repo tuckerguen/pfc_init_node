@@ -1,10 +1,14 @@
 #include "ros/ros.h"
 #include "sensor_msgs/Image.h"
+#include "geometry_msgs/Pose.h"
+#include "gazebo_msgs/ModelStates.h"
 #include <opencv2/highgui.hpp>
 #include <opencv2/core.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
 #include "pfc_initializer.h"
+#include "pose_helper.h"
+#include "needle_pose.h"
 
 
 void run(PfcInitializer pfc_init, ros::NodeHandle& nh)
@@ -40,9 +44,8 @@ int main(int argc, char** argv)
 
 	ros::NodeHandle nh;
 
-    ros::Subscriber l_cam_sub;
-    ros::Subscriber r_cam_sub;
-
+    // ros::Subscriber l_cam_sub;
+    // ros::Subscriber r_cam_sub;
 
 	//Get camera intrinsics
 	sensor_msgs::CameraInfo l_inf = *(
@@ -52,6 +55,15 @@ int main(int argc, char** argv)
 		ros::topic::waitForMessage<sensor_msgs::CameraInfo>("/davinci_endo/right/camera_info", nh)
 	);
 
+	gazebo_msgs::ModelStates model_states = *(
+		ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states", nh)
+	);
+
+	geometry_msgs::Pose needle_pose = model_states.pose[2];
+	Eigen::Quaternionf q(needle_pose.orientation.w, needle_pose.orientation.x, needle_pose.orientation.y, needle_pose.orientation.z);
+	cout << q.x() << ", " << q.y() << ", " << q.z() << ", " << q.w() << endl;
+cv::Point3d loc(needle_pose.position.x, needle_pose.position.y, needle_pose.position.z);
+	NeedlePose true_pose(loc, q);
 
     // Convert camera intrinsics to opencv mats
 	cv::Mat P_l = cv::Mat(3, 4, CV_64FC1, (void *) l_inf.P.data());
@@ -98,7 +110,11 @@ int main(int argc, char** argv)
 
 	PfcInitializer pfc_init(P_l, P_r, l_img, r_img, params);
 	cout << "created pfc_init object" << endl;
-    pfc_init.run(true, true, 0);
+	cout << true_pose.location << endl;
+	cout << true_pose.getEulerAngleOrientation() << endl;
+	// cout << true_pose.getQuaternionOrientation() << endl;
+    pfc_init.run(true, true, true_pose);
+
 
     return 0;
 }

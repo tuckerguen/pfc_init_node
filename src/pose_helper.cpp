@@ -37,33 +37,6 @@ cv::Point3d deProjectPoints(const cv::Mat& p_l, const cv::Mat& p_r, const cv::Ma
     return result;
 }
 
-// // returns coordinate location of needle in template after rotation and scaling transformation
-// cv::Mat getRotatedOrigin(double angle, double scale, const NeedleTemplate* templ)
-// {
-//     // "Correct" angle is clockwise, we rotate counter clockwise
-//     angle = -angle;
-
-//     // Original template size
-//     double cols = scale * templ->raw.cols;
-//     double rows = scale * templ->raw.rows;
-
-//     //Get center of original image
-//     cv::Point2d center((cols-1)/2.0, (rows-1)/2.0);
-//     //Get rotation matrix given center, angle, and scale
-//     cv::Mat rot = getRotationMatrix2D(center, angle, 1.0);
-//     //Compute what the size of the rotated image will be
-//     cv::Rect2d bbox = cv::RotatedRect(cv::Point2d(), cv::Size(cols, rows), angle).boundingRect2f();
-    
-//     // Add translation to rotation matrix to shift the center of the image to the correct location
-//     rot.at<double>(0, 2) += bbox.width / 2.0 - cols / 2.0;
-//     rot.at<double>(1, 2) += bbox.height / 2.0 - rows / 2.0;
-
-//     //Scale the original origin to account for scale of template
-//     cv::Mat original_origin = (cv::Mat_<double>(3,1) << scale * templ->origin.x, scale * templ->origin.y, 1);
-//     cv::Mat final_origin = rot * original_origin;
-//     return final_origin;
-// }
-
 // Draws needle origin on image, given match and rotated/scaled template
 void drawNeedleOrigin(cv::Mat& img, cv::Point2d needle_origin, cv::Scalar color){
     // Draw point
@@ -73,20 +46,17 @@ void drawNeedleOrigin(cv::Mat& img, cv::Point2d needle_origin, cv::Scalar color)
 }
 
 //Prints and returns location and orientation error between given pose and ground truth
-vector<double> scorePoseEstimation(NeedlePose pose, int pose_id, bool print)
+vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bool print)
 {
-    // Fetch ground truth pose
-    NeedlePose true_pose = readTruePoseFromCSV(pose_id);
-
     //Convert to point3d 
     cv::Point3d true_loc = true_pose.location;
-    cv::Point3d result_loc = pose.location;
+    cv::Point3d result_loc = est_pose.location;
     //Calc euclidean dist between points
     double loc_err = cv::norm(result_loc - true_loc);
 
     // Convert to quaternion
     Eigen::Quaternionf true_orientation = true_pose.getQuaternionOrientation();
-    Eigen::Quaternionf result_orientation = pose.getQuaternionOrientation();  
+    Eigen::Quaternionf result_orientation = est_pose.getQuaternionOrientation();  
 
     // Calc angle between quaternions in angle-axis representation
     Eigen::Quaternionf qdiff = true_orientation.inverse() * result_orientation;

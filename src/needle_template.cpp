@@ -92,6 +92,7 @@ void NeedleTemplate::GenerateTemplate(float z, float a, float b, float y)
     // // Run canny edge detection
     // cv::Canny( detected_edges, image, 40, 120, 3);
 
+    // cout << z << ", " << pfc::rad2deg*a << ", " << pfc::rad2deg*b << ", " << pfc::rad2deg*y << endl;
     // cv::namedWindow("templ");
     // cv::imshow("templ", image);
     // cv::waitKey(0);

@@ -20,7 +20,7 @@ private:
     /**
      * @brief Prints results of initilization to console
      */
-    void displayResults(int pose_id);
+    void displayResults(NeedlePose true_pose);
 
 public:
     //Camera Projection Matrices
@@ -74,7 +74,7 @@ public:
      * @param print_results If function should print results to console
      * @param multi_thread Use threaded version of match
      */
-    void run(bool print_results, bool multi_thread, int pose_id);
+    void run(bool print_results, bool multi_thread, NeedlePose true_pose);
 
     /**
      * @brief Returns the results of initialization as a vector of vectors

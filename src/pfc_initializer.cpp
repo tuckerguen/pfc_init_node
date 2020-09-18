@@ -14,7 +14,7 @@ using namespace std;
 
 // Calculates needle pose from images (primary function for use in particle filter)
 // Stores pose in this object
-void PfcInitializer::run(bool print_results, bool multi_thread, int pose_id)
+void PfcInitializer::run(bool print_results, bool multi_thread, NeedlePose true_pose)
 {
     // Start timer
     double t = (double)cv::getTickCount();
@@ -27,7 +27,7 @@ void PfcInitializer::run(bool print_results, bool multi_thread, int pose_id)
     if(print_results)
     {
         cout << "Time: " << t << " s" << endl;
-        displayResults(pose_id);
+        displayResults(true_pose);
     }
 }
 
@@ -86,7 +86,7 @@ void PfcInitializer::computeNeedlePose(bool multi_thread)
     }
 }
 
-void PfcInitializer::displayResults(int pose_id)
+void PfcInitializer::displayResults(NeedlePose true_pose)
 {
     // Draw matches onto images
     for(int i = 0; i < l_matches.size(); i++)
@@ -104,7 +104,7 @@ void PfcInitializer::displayResults(int pose_id)
     {
         cout << "Candidate Point " + to_string(i) << endl;
         poses.at(i).print();
-        scorePoseEstimation(poses.at(i), pose_id, true);      
+        scorePoseEstimation(poses.at(i), true_pose, true);      
         cout << "----------------------------------------------------------------------" << endl;
     }
 
@@ -115,7 +115,7 @@ void PfcInitializer::displayResults(int pose_id)
     cv::imshow("left", l_img.raw);
     cv::imshow("right", r_img.raw);
     cv::imshow("left template", l_matches.at(0).templ);
-    cv::imshow("right template", l_matches.at(0).templ);
+    cv::imshow("right template", r_matches.at(0).templ);
     cv::waitKey(0);
 
     cv::destroyAllWindows();
@@ -151,9 +151,9 @@ vector<vector<string>> PfcInitializer::getResultsAsVector(int pose_id)
         // results.at(i).push_back(to_string(e.y()));
         // results.at(i).push_back(to_string(e.z()));
         
-        vector<double> score = scorePoseEstimation(pose, pose_id, false);
-        results.at(i).push_back(to_string(score.at(0)));
-        results.at(i).push_back(to_string(score.at(1))); 
+        // vector<double> score = scorePoseEstimation(pose, pose_id, false);
+        // results.at(i).push_back(to_string(score.at(0)));
+        // results.at(i).push_back(to_string(score.at(1))); 
     }
 
     return results;
