@@ -95,7 +95,7 @@ int main(int argc, char** argv)
     cv::Mat P_r = cv::Mat(3, 4, CV_64FC1, (void *) r_inf.P.data());
 
 	// Configure csv key (first row in the csv)
-	int num_cand_pts = 5;
+	int num_cand_pts = 10;
 	vector<string> csv_key_base
 	{ 
 		"time", "loc_err", "rot_err"
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
 
 		/** Create and run initializer */
 		PfcInitializer pfc_init(P_l, P_r, l_img, r_img, params);	
-		pfc_init.run(true, true, true_pose);
+		pfc_init.run(false, true, true_pose);
 
 		// Write test data to csv file
 		vector<string> results = pfc_init.getResultsAsVector(true_pose);

@@ -21,6 +21,12 @@ private:
     Eigen::Vector3f orientation;
 
 public:
+    double loc_err;
+    double rot_err;
+
+    bool operator< (const NeedlePose &np) const {
+        return loc_err < np.loc_err;
+    }
     /**
      * @brief Cartesian 3D location of the needle (meters)
      */
@@ -84,6 +90,8 @@ public:
      * @todo maybe change to toString() and allow user to print it
      */
     void print();
+
+    
 
 };
 

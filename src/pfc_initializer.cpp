@@ -132,6 +132,18 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     results.push_back(to_string(tq.z()));
     results.push_back(to_string(tq.w()));
 
+    // Score results
+    for(int i = 0; i < poses.size(); i++)
+    {
+        NeedlePose* pose = &poses.at(i);
+        vector<double> score = scorePoseEstimation(*pose, true_pose, false);
+        pose->loc_err = score.at(0);
+        pose->rot_err = score.at(1);
+    }
+
+    // Sort results
+    std::sort(poses.begin(), poses.end());
+
     for(int i = 0; i < poses.size(); i++)
     {
         NeedlePose pose = poses.at(i);
@@ -139,10 +151,9 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
         // Add time
         results.push_back(to_string(time));
 
-        vector<double> score = scorePoseEstimation(pose, true_pose, false);
-        results.push_back(to_string(score.at(0)));
-        results.push_back(to_string(score.at(1))); 
-
+        results.push_back(to_string(pose.loc_err));
+        results.push_back(to_string(pose.rot_err)); 
+        cout << pose.loc_err << ", " << pose.rot_err << endl;
         //Add location guess
         // results.push_back(to_string(pose.location.x));
         // results.push_back(to_string(pose.location.y));

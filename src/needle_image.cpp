@@ -37,9 +37,9 @@ void NeedleImage::filterRaw()
     // filter by HSV values 
     cv::inRange(img_HSV, cv::Scalar(pfc::low_h, pfc::low_s, pfc::low_v), cv::Scalar(pfc::high_h, pfc::high_s, pfc::high_v), image);
     // Display image for debugging
-    cv::namedWindow("edge detected");
-    cv::imshow("edge detected",image);
-    cv::waitKey(0);
+    // cv::namedWindow("edge detected");
+    // cv::imshow("edge detected",image);
+    // cv::waitKey(0);
 }
 
 //TODO: Make this a member function
