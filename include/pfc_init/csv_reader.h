@@ -43,6 +43,10 @@ public:
 	 * @brief Reads all rows from csv into vector
 	 */
 	vector<vector<string> > getData();
+
 };
+
+void writeDataListToCSV(vector<vector<string>> dataList);
+
 
 #endif

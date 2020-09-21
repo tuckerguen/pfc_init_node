@@ -115,8 +115,8 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
         // cout << "Z step time: " << tz << " s" << endl;
     }
 
-    t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-    cout << "thread time: " << t << " s" << endl;
+    // t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    // cout << "thread time: " << t << " s" << endl;
     return pq_to_vector(best_matches);
 }
 

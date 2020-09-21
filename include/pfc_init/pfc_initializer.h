@@ -28,6 +28,8 @@ public:
     cv::Mat P_l; 
     // Right camera 
     cv::Mat P_r;
+
+    double time;
     
     /**
      * @brief Left stereo image
@@ -80,5 +82,5 @@ public:
      * @brief Returns the results of initialization as a vector of vectors
      * Each sub vector is a candidate point
      */
-    std::vector<std::vector<string>> getResultsAsVector(int pose_id);
+    std::vector<string> getResultsAsVector(NeedlePose true_pose);
 };

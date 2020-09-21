@@ -45,14 +45,14 @@ void drawNeedleOrigin(cv::Mat& img, cv::Point2d needle_origin, cv::Scalar color)
             0, color, 1, 8, 0);
 }
 
-//Prints and returns location and orientation error between given pose and ground truth
+//Prints and returns location (in mm) and orientation error between given pose and ground truth
 vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bool print)
 {
     //Convert to point3d 
     cv::Point3d true_loc = true_pose.location;
     cv::Point3d result_loc = est_pose.location;
     //Calc euclidean dist between points
-    double loc_err = cv::norm(result_loc - true_loc);
+    double loc_err = 1000*cv::norm(result_loc - true_loc);
 
     // Convert to quaternion
     Eigen::Quaternionf true_orientation = true_pose.getQuaternionOrientation();
@@ -65,7 +65,7 @@ vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bo
     if(print)
     {
         // Format and print results
-        printf("(p_err=%fmm, r_err=%fdeg)\n", 1000*loc_err, angle_err);
+        printf("(p_err=%fmm, r_err=%fdeg)\n", loc_err, angle_err);
     }
 
     // Store and return locationa and orientation errors

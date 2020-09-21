@@ -138,7 +138,7 @@ vector<vector<string>> runOnAllData(bool cheat, bool print, bool thread)
     return dataList;
 }
 
-void writeDataListToCSV(vector<vector<string>> dataList)
+void writeDataListToCSV(vector<string> dataList)
 {
     ofstream data_file;
     auto now = std::chrono::system_clock::now();

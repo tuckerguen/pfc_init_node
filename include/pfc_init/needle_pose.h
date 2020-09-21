@@ -84,6 +84,7 @@ public:
      * @todo maybe change to toString() and allow user to print it
      */
     void print();
+
 };
 
 #endif

@@ -23,10 +23,11 @@ void PfcInitializer::run(bool print_results, bool multi_thread, NeedlePose true_
     
     //Stop timer
     t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
+    cout << "Time: " << t << " s" << endl;
+    time = t;
 
     if(print_results)
     {
-        cout << "Time: " << t << " s" << endl;
         displayResults(true_pose);
     }
 }
@@ -110,50 +111,57 @@ void PfcInitializer::displayResults(NeedlePose true_pose)
 
     cv::namedWindow("left", cv::WINDOW_AUTOSIZE);
     cv::namedWindow("right", cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("left template", cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("right template", cv::WINDOW_AUTOSIZE);
     cv::imshow("left", l_img.raw);
     cv::imshow("right", r_img.raw);
-    cv::imshow("left template", l_matches.at(0).templ);
-    cv::imshow("right template", r_matches.at(0).templ);
     cv::waitKey(0);
 
     cv::destroyAllWindows();
 }
 
-vector<vector<string>> PfcInitializer::getResultsAsVector(int pose_id)
+vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
 {
-    vector<vector<string>> results;
+    vector<string> results;
 
-    // Add pixel location guesses
-    for(int i = 0; i < l_matches.size(); i++)
+    results.push_back(to_string(true_pose.location.x));
+    results.push_back(to_string(true_pose.location.y));
+    results.push_back(to_string(true_pose.location.z));
+
+    Eigen::Quaternionf tq = true_pose.getQuaternionOrientation();
+    results.push_back(to_string(tq.x()));
+    results.push_back(to_string(tq.y()));
+    results.push_back(to_string(tq.z()));
+    results.push_back(to_string(tq.w()));
+
+    for(int i = 0; i < poses.size(); i++)
     {
-        TemplateMatch match_l = l_matches.at(i);
-        TemplateMatch match_r = r_matches.at(i);
         NeedlePose pose = poses.at(i);
 
-        //Add location guess
-        results.at(i).push_back(to_string(pose.location.x));
-        results.at(i).push_back(to_string(pose.location.y));
-        results.at(i).push_back(to_string(pose.location.z));
+        // Add time
+        results.push_back(to_string(time));
 
-        //Add orientation guess
-        //Quaternion
-        Eigen::Quaternionf q = pose.getQuaternionOrientation();
-        results.at(i).push_back(to_string(q.x()));
-        results.at(i).push_back(to_string(q.y()));
-        results.at(i).push_back(to_string(q.z()));
-        results.at(i).push_back(to_string(q.w()));
+        vector<double> score = scorePoseEstimation(pose, true_pose, false);
+        results.push_back(to_string(score.at(0)));
+        results.push_back(to_string(score.at(1))); 
+
+        //Add location guess
+        // results.push_back(to_string(pose.location.x));
+        // results.push_back(to_string(pose.location.y));
+        // results.push_back(to_string(pose.location.z));
+
+        // //Add orientation guess
+        // //Quaternion
+        // Eigen::Quaternionf q = pose.getQuaternionOrientation();
+        // results.push_back(to_string(q.x()));
+        // results.push_back(to_string(q.y()));
+        // results.push_back(to_string(q.z()));
+        // results.push_back(to_string(q.w()));
 
         //Euler Angles orientation guess
         // Eigen::Vector3f e = pose.getEulerAngleOrientation();
         // results.at(i).push_back(to_string(e.x()));
         // results.at(i).push_back(to_string(e.y()));
         // results.at(i).push_back(to_string(e.z()));
-        
-        // vector<double> score = scorePoseEstimation(pose, pose_id, false);
-        // results.at(i).push_back(to_string(score.at(0)));
-        // results.at(i).push_back(to_string(score.at(1))); 
+
     }
 
     return results;
