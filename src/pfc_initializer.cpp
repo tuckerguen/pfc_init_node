@@ -121,16 +121,29 @@ void PfcInitializer::displayResults(NeedlePose true_pose)
 vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
 {
     vector<string> results;
-
+    // Add true pose
     results.push_back(to_string(true_pose.location.x));
     results.push_back(to_string(true_pose.location.y));
     results.push_back(to_string(true_pose.location.z));
-
     Eigen::Quaternionf tq = true_pose.getQuaternionOrientation();
     results.push_back(to_string(tq.x()));
     results.push_back(to_string(tq.y()));
     results.push_back(to_string(tq.z()));
     results.push_back(to_string(tq.w()));
+
+    // Add matching parameters
+    results.push_back(to_string(left_templ.params.min_yaw));
+    results.push_back(to_string(left_templ.params.max_yaw));
+    results.push_back(to_string(left_templ.params.yaw_inc));
+    results.push_back(to_string(left_templ.params.roll_range.start));
+    results.push_back(to_string(left_templ.params.roll_range.end));
+    results.push_back(to_string(left_templ.params.roll_inc));
+    results.push_back(to_string(left_templ.params.pitch_range.start));
+    results.push_back(to_string(left_templ.params.pitch_range.end));
+    results.push_back(to_string(left_templ.params.pitch_inc));
+    results.push_back(to_string(left_templ.params.min_z));
+    results.push_back(to_string(left_templ.params.max_z));
+    results.push_back(to_string(left_templ.params.z_inc));
 
     // Score results
     for(int i = 0; i < poses.size(); i++)

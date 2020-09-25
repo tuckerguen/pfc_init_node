@@ -98,17 +98,33 @@ int main(int argc, char** argv)
 	int num_cand_pts = 10;
 	vector<string> csv_key_base
 	{ 
-		"time", "loc_err", "rot_err"
+		"time", "loc_err", "rot_err", 
 		//, "est_loc_x", "est_loc_y", "est_loc_z", "est_rot_x", "est_rot_y", "est_rot_z", "est_rot_w",
-	};    
+	};
 	vector<string> csv_key
 	{
-		"true_loc_x", "true_loc_y", "true_loc_z", "true_rot_x", "true_rot_y", "true_rot_z", "true_rot_w"		
+		"true_loc_x", "true_loc_y", "true_loc_z", "true_rot_x", "true_rot_y", "true_rot_z", "true_rot_w",
+		"yaw_min", "yaw_max", "yaw_inc",
+		"roll_min", "roll_max", "roll_inc",
+		"pitch_min", "pitch_max", "pitch_inc",
+		"z_min", "z_max", "z_inc",
 	};
 	for(int i = 0; i < num_cand_pts; i++)
 	{
 		csv_key.insert(csv_key.end(), csv_key_base.begin(), csv_key_base.end());
 	}
+
+	/** Configure Match Parameters */
+	pfc::match_params params = {
+		0, 360, 10, //yaw
+		cv::Range(0, 1), 15, //pitch
+		cv::Range(0,1), 15, //roll
+		0.07, 0.18, 0.01, //z
+		num_cand_pts, // # candidate points to return
+		10, // # points in needle line
+		P_l,
+		P_r
+	};
 
 	vector<vector<string>> all_results;
 	all_results.insert(all_results.begin(), csv_key);
@@ -120,11 +136,11 @@ int main(int argc, char** argv)
 	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X");
 	string time = ss.str();
 
+	// Random needle position boundaries
 	float x_min = -0.05, x_max = 0.05;
 	float y_min = -0.04, y_max = 0.03;
 	float z_min = 0.07, z_max = 0.18;
-
-
+	
 	int num_trials = 10;
 	for(int i = 0; i < num_trials; i++)
 	{
@@ -132,7 +148,7 @@ int main(int argc, char** argv)
 		geometry_msgs::Pose start_pose;
 		start_pose.position.x = rng(x_min, x_max);
 		start_pose.position.y = rng(y_min, y_max);
-		start_pose.position.z = rng(z_min, z_max);\
+		start_pose.position.z = rng(z_min, z_max);
 
 		//http://planning.cs.uiuc.edu/node198.html
 		float u = rng(0,1), v = rng(0,1), w = rng(0,1);
@@ -174,18 +190,6 @@ int main(int argc, char** argv)
 		// cv::namedWindow("r");
 		// cv::imshow("r", r_img);
 		// cv::waitKey(0);
-
-		/** Configure Match Parameters */
-		pfc::match_params params = {
-			0, 360, 10, //yaw
-			cv::Range(0, 1), 15, //pitch
-			cv::Range(0,1), 15, //roll
-			0.07, 0.18, 0.01, //z
-			num_cand_pts, // # candidate points to return
-			10, // # points in needle line
-			P_l,
-			P_r
-		};
 
 		/** Create and run initializer */
 		PfcInitializer pfc_init(P_l, P_r, l_img, r_img, params);	
