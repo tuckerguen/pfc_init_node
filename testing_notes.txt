@@ -1,0 +1,33 @@
+Notes on Testing Goals and Methods
+-------------------------------------
+Performance metrics:
+Measure candidate point quality (rotation and location errors)
+Measure time 
+
+Goals:
+Understand relationship of parameters and scenarios and our performance metrics
+
+Methods:
+Environment configuration: Planar vs non-planar
+Inner loop (y-axis): For each metric, run each parameter set on the same set of randomly generated poses
+Outer loop (x-axis): Modify a parameter at some increment
+After running each modified parameter set on the set of poses, we should have a good metric for the performance of the algorithm in relation to the parameters
+
+Relationships to Analyze:
+Planar Rotation:
+    Yaw increment vs:
+        time, rot_err, loc_err
+NonPlanar Rotation:
+    Yaw increment vs:
+        time, rot_err, loc_err
+    Pitch increment vs:
+        time, rot_err, loc_err
+    Roll increment vs:
+        time, rot_err, loc_err
+    Pitch max, fixed inc vs:
+        time, rot_err, loc_err
+    Roll max, fixed inc vs:
+        time, rot_err, loc_err    
+    
+    Fixed increment, non-planar rotation (roll and pitch):
+        # cand pts

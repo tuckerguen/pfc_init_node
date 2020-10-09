@@ -22,6 +22,14 @@ vector<T> pq_to_vector(priority_queue<T, vector<T>, C> pq)
     return vec;
 }
 
+
+double constrainAngle(double x){
+    x = fmod(x + 180,360);
+    if (x < 0)
+        x += 360;
+    return x - 180;
+}
+
 // Template match template on base image over range of scales and rotations
 vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
 {
@@ -37,9 +45,9 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
     // some other configuration file
     double min_a = templ.params.min_yaw, max_a = templ.params.max_yaw;
     double a_inc = templ.params.yaw_inc;
-    double min_b = templ.params.pitch_range.start, max_b = templ.params.pitch_range.end;
+    double min_b = templ.params.min_pitch, max_b = templ.params.max_pitch;
     double b_inc = templ.params.pitch_inc;
-    double min_y = templ.params.roll_range.start, max_y = templ.params.roll_range.end;
+    double min_y = templ.params.min_roll, max_y = templ.params.max_roll;
     double y_inc = templ.params.roll_inc;
     double min_z = templ.params.min_z, max_z = templ.params.max_z;
     double z_inc = templ.params.z_inc;
@@ -83,9 +91,10 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
                     // Store other match details
                     new_match.z = z;
                     // TODO: Check neg/pos direction for pitch/roll 
-                    new_match.yaw = a > 180 ? (a - 360) : a;
-                    new_match.pitch = b;
-                    new_match.roll = y;
+                    // new_match.yaw = a > 180 ? (a - 360) : a;
+                    new_match.yaw = constrainAngle(a);
+                    new_match.pitch = constrainAngle(b);
+                    new_match.roll = constrainAngle(y);
                     // Offset the origin to sit in the correct location of the final image
                     new_match.origin = templ.origin + cv::Point2d(new_match.rect.x, new_match.rect.y);
 
@@ -128,31 +137,31 @@ vector<TemplateMatch> matchThreaded(const cv::Mat& img, NeedleTemplate templ)
     std::vector<std::future<vector<TemplateMatch>>> futures;
 
     // Get z range
-    double max_yaw = templ.params.max_yaw;
-    double min_yaw = templ.params.min_yaw;
-    double yaw_inc = templ.params.yaw_inc;
+    double max_val = templ.params.max_pitch;
+    double min_val = templ.params.min_pitch;
+    double val_inc = templ.params.pitch_inc;
 
     // Calc num threads and scale increment between sequential threads
     int num_threads = get_nprocs();
     // cout << num_threads << endl;
     
-    double thread_inc = ((max_yaw - min_yaw) / (double)num_threads);
+    double thread_inc = ((max_val - min_val) / (double)num_threads);
 
     // Loop to launch threads
     for(int tid = 0; tid < num_threads; tid++)
     {
         // Compute thread range
-        templ.params.min_yaw = (min_yaw + tid * thread_inc);
-        templ.params.max_yaw = min_yaw + (tid+1) * thread_inc;
+        templ.params.min_pitch = (min_val + tid * thread_inc);
+        templ.params.max_pitch = min_val + (tid+1) * thread_inc;
 
         //Round to correct decimal place (this rounds to 2 places, only works 
         // For increments of 2 decimal place as well)
-        templ.params.min_yaw = (float)((int) (templ.params.min_yaw*100+0.5))/100;
-        templ.params.max_yaw = (float)((int) (templ.params.max_yaw*100+0.5))/100;
+        templ.params.min_pitch = (float)((int) (templ.params.min_pitch*100+0.5))/100;
+        templ.params.max_pitch = (float)((int) (templ.params.max_pitch*100+0.5))/100;
 
         // Except first, shift range to avoid overlap
         if(tid != 0){
-            templ.params.min_yaw += yaw_inc;
+            templ.params.min_pitch += val_inc;
         }
 
         // Launch thread and collect future

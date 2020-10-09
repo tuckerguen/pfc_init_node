@@ -43,9 +43,11 @@ namespace pfc {
         double min_yaw;
         double max_yaw;
         double yaw_inc;
-        cv::Range pitch_range;
+        double min_pitch;
+        double max_pitch;
         double pitch_inc;
-        cv::Range roll_range;
+        double min_roll;
+        double max_roll;
         double roll_inc;
 
         double min_z;

@@ -1,7 +1,7 @@
 ## Running the Simulation and Node for Testing pfc_init Performance
 ### Configuring the Workspace
 Option 1:
-1. Clone the entire catkin workspace src directory into a new catkin workspace.
+1. Clone the entire catkin workspace src directory into a new catkin workspace (find at: https://github.com/tuckerguen/pfc_init_catkin_ws).
 2. Build the workspace, resolve errors
 Option 2:
 1. Clone the pfc_init project into an empty catkin workspace src directory

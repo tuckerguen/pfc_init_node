@@ -51,13 +51,14 @@ vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bo
     //Convert to point3d 
     cv::Point3d true_loc = true_pose.location;
     cv::Point3d result_loc = est_pose.location;
+
     //Calc euclidean dist between points
     double loc_err = 1000*cv::norm(result_loc - true_loc);
 
     // Convert to quaternion
     Eigen::Quaternionf true_orientation = true_pose.getQuaternionOrientation();
     Eigen::Quaternionf result_orientation = est_pose.getQuaternionOrientation();  
-
+    
     // Calc angle between quaternions in angle-axis representation
     Eigen::Quaternionf qdiff = true_orientation.inverse() * result_orientation;
     double angle_err = 2*atan2(qdiff.vec().norm(), qdiff.w()) * pfc::rad2deg;

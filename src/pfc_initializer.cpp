@@ -95,6 +95,17 @@ void PfcInitializer::displayResults(NeedlePose true_pose)
         TemplateMatch match_l = l_matches.at(i);
         TemplateMatch match_r = r_matches.at(i);
         int color_inc = 255/l_matches.size();
+
+        cv::namedWindow("l", CV_WINDOW_AUTOSIZE);
+        cv::namedWindow("r", CV_WINDOW_AUTOSIZE);
+        imshow("l", match_l.templ);
+        imshow("r",match_r.templ);
+
+        printf("%f, %f == %f\n", match_l.pitch, match_r.pitch, true_pose.getEulerAngleOrientation().y());
+
+        cv::waitKey(0);
+        // match_l.templ.copyTo(l_img.raw.rowRange(match_l.rect.x,match_l.rect.x+match_l.rect.width), l_img.raw.colRange(match_l.rect.y, match_l.rect.y+match_l.rect.height));
+        // match_r.templ.copyTo(r_img.raw.rowRange(match_r.rect.x,match_r.rect.x+match_r.rect.width), r_img.raw.colRange(match_r.rect.y, match_r.rect.y+match_r.rect.height));
         match_l.drawOnImage(l_img.raw, cv::Scalar(i*color_inc, 255-i*color_inc, 180));
         match_r.drawOnImage(r_img.raw, cv::Scalar(i*color_inc, 255-i*color_inc, 180));
         drawNeedleOrigin(l_img.raw, match_l.origin, cv::Scalar(0,255,255)); 
@@ -120,6 +131,10 @@ void PfcInitializer::displayResults(NeedlePose true_pose)
 
 vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
 {
+    Eigen::Vector3f o = poses.at(0).getEulerAngleOrientation();
+    Eigen::Vector3f t = true_pose.getEulerAngleOrientation();
+    printf("%f, %f, %f == %f, %f, %f\n", o.x(), o.y(), o.z(), t.x(), t.y(), t.z());
+
     vector<string> results;
     // Add true pose
     results.push_back(to_string(true_pose.location.x));
@@ -135,15 +150,18 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     results.push_back(to_string(left_templ.params.min_yaw));
     results.push_back(to_string(left_templ.params.max_yaw));
     results.push_back(to_string(left_templ.params.yaw_inc));
-    results.push_back(to_string(left_templ.params.roll_range.start));
-    results.push_back(to_string(left_templ.params.roll_range.end));
+    results.push_back(to_string(left_templ.params.min_roll));
+    results.push_back(to_string(left_templ.params.max_roll));
     results.push_back(to_string(left_templ.params.roll_inc));
-    results.push_back(to_string(left_templ.params.pitch_range.start));
-    results.push_back(to_string(left_templ.params.pitch_range.end));
+    results.push_back(to_string(left_templ.params.min_pitch));
+    results.push_back(to_string(left_templ.params.max_pitch));
     results.push_back(to_string(left_templ.params.pitch_inc));
     results.push_back(to_string(left_templ.params.min_z));
     results.push_back(to_string(left_templ.params.max_z));
     results.push_back(to_string(left_templ.params.z_inc));
+
+    // Add number cand pts
+    results.push_back(to_string(left_templ.params.num_matches));
 
     // Score results
     for(int i = 0; i < poses.size(); i++)
@@ -166,7 +184,8 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
 
         results.push_back(to_string(pose.loc_err));
         results.push_back(to_string(pose.rot_err)); 
-        cout << pose.loc_err << ", " << pose.rot_err << endl;
+
+        // cout << pose.loc_err << ", " << pose.rot_err << endl;
         //Add location guess
         // results.push_back(to_string(pose.location.x));
         // results.push_back(to_string(pose.location.y));
