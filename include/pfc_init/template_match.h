@@ -94,7 +94,7 @@ public:
      * @param img Image to draw the match onto
      * @param color Color of the rectangle
      */
-    void drawOnImage(cv::Mat& img, const cv::Scalar& color);
+    void drawOnImage(cv::Mat& img, const cv::Scalar& color) const;
 };
 
 class TemplateMatchComparator 

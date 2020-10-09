@@ -11,7 +11,7 @@ void TemplateMatch::printMatchSummary(const string& name)
 }
 
 // Draws the match bounding rectangle on the image
-void TemplateMatch::drawOnImage(cv::Mat& img, const cv::Scalar& color)
+void TemplateMatch::drawOnImage(cv::Mat& img, const cv::Scalar& color) const
 {
     rectangle(img, rect, color, pfc::line_weight, pfc::line_type, pfc::shift);
 }

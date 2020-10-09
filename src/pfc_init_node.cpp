@@ -2,48 +2,50 @@
 #include "sensor_msgs/Image.h"
 #include "geometry_msgs/Pose.h"
 #include "gazebo_msgs/ModelStates.h"
-#include <opencv2/highgui.hpp>
 #include <opencv2/core.hpp>
 #include <cv_bridge/cv_bridge.h>
 #include <sensor_msgs/CameraInfo.h>
 #include "pfc_initializer.h"
 #include "pose_helper.h"
 #include "needle_pose.h"
-#include "csv_reader.h"
 #include <gazebo_msgs/SetModelState.h>
 #include <vector>
 #include <chrono>
 #include <ctime>
 #include <sstream>
 #include <cstdlib>
+#include <random>
+#include <fstream>
+
+void writeDataListToCSV(vector<vector<string>> dataList)
+{
+    ofstream data_file;
+    auto now = std::chrono::system_clock::now();
+    auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+    std::stringstream ss;
+    ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X");
+    string time = ss.str();
+    data_file.open("src/pfc_init/test_results/pfcinit_performance_data_" + time + ".csv");
+
+    if (data_file.fail()){
+        cout << "couldn't open file" << endl;
+    }
+
+    for(int i = 0; i < dataList.size(); i++){
+        for(int j = 0; j < dataList.at(i).size(); j++)
+        {
+            string data_point = dataList.at(i).at(j);
+            if(j < dataList.at(i).size()-1)
+                data_file << data_point << ", ";
+            else
+                data_file << data_point;
+        }
+        data_file << "\n";
+    }
+}
 
 using namespace std;
-// void run(PfcInitializer pfc_init, ros::NodeHandle& nh)
-// {
-// 	// Collect the newest images
-// 	cv_bridge::CvImagePtr cv_ptr;
-// 	try {
-// 		cv_ptr = cv_bridge::toCvCopy(ros::topic::waitForMessage<sensor_msgs::Image>("/davinci_endo/left/image_raw", nh));
-// 		pfc_init.l_img.image = cv_ptr->image;
-// 	} catch (cv_bridge::Exception &e) {
-// 		ROS_ERROR("Could not convert from encoding to 'bgr8' on left cam.");
-// 	}
-// 	try {
-// 		cv_ptr = cv_bridge::toCvCopy(ros::topic::waitForMessage<sensor_msgs::Image>("/davinci_endo/right/image_raw", nh));
-// 		pfc_init.r_img.image = cv_ptr->image;
-// 	}
-// 	catch (cv_bridge::Exception &e) {
-// 		ROS_ERROR("Could not convert from encoding to 'bgr8' on right cam.");
-// 	}
-
-// 	cv::namedWindow("l");
-// 	cv::imshow("l", pfc_init.l_img.image);
-// 	cv::waitKey(0);
-
-// 	cv::namedWindow("r");
-// 	cv::imshow("r", pfc_init.r_img.image);
-// 	cv::waitKey(0);
-// }    
 
 cv::Mat l_img;
 cv::Mat r_img;
@@ -66,7 +68,11 @@ void CB_cam_r(const sensor_msgs::ImageConstPtr& i){
 
 float rng(float min, float max)
 {
-	return min + static_cast <float> (rand()) /( static_cast <float> (RAND_MAX/(max-min)));
+    //https://en.cppreference.com/w/cpp/numeric/random/uniform_int_distribution
+    std::random_device rd;
+    std::mt19937 gen(rd());
+	std::uniform_real_distribution<double> dist(min, max);
+	return dist(gen);
 }
 
 int main(int argc, char** argv)
@@ -76,9 +82,6 @@ int main(int argc, char** argv)
 	ros::NodeHandle nh;
 	ros::Subscriber l_cam_sub;
 	ros::Subscriber r_cam_sub;
-
-	/** Initialize RNG **/
-	srand (static_cast <unsigned> (time(0)));
 
 	/** Set up subscribers for images */
 	l_cam_sub = nh.subscribe("/davinci_endo/left/image_raw" , 1, &CB_cam_l);
@@ -145,18 +148,18 @@ int main(int argc, char** argv)
 		test_pose.orientation.y = sqrt(1-u) * cos(2*M_PI*v);
 		test_pose.orientation.z = sqrt(u) * sin(2*M_PI*w);
 		test_pose.orientation.w = sqrt(u) * cos(2*M_PI*w);
-		test_pose.orientation.x = sqrt(1-u) * sin(2*M_PI*v);	
+		test_pose.orientation.x = sqrt(1-u) * sin(2*M_PI*v);
 		
 		// For testing only one rotation
-		// double radians = pfc::deg2rad * rng(0,360);
-		// Eigen::Quaternionf q;
-		// q = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()) //roll
-		// 	* Eigen::AngleAxisf(radians, Eigen::Vector3f::UnitY()) //pitch
-		// 	* Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ()); //yaw
-		// test_pose.orientation.x = q.x();
-		// test_pose.orientation.y = q.y();
-		// test_pose.orientation.z = q.z();
-		// test_pose.orientation.w = q.w();
+//		 double radians = pfc::deg2rad * rng(0,360);
+//		 Eigen::Quaternionf q;
+//		 q = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()) //roll
+//		 	* Eigen::AngleAxisf(0, Eigen::Vector3f::UnitY()) //pitch
+//		 	* Eigen::AngleAxisf(radians, Eigen::Vector3f::UnitZ()); //yaw
+//		 test_pose.orientation.x = q.x();
+//		 test_pose.orientation.y = q.y();
+//		 test_pose.orientation.z = q.z();
+//		 test_pose.orientation.w = q.w();
 
 		poses.push_back(test_pose);
 	}

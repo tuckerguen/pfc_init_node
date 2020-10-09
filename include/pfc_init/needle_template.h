@@ -5,6 +5,7 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
+#include <utility>
 #include "template_match.h"
 #include "pfc_initializer_constants.h"
 #include "needle_image.h"
@@ -37,19 +38,19 @@ public:
     bool left;
 
 
-    void GenerateTemplate(float z, float a, float b, float y);
+    void GenerateTemplate(double z, double y, double p, double r);
 
     /**
      * @brief Needle template constructor
      * 
      */
     NeedleTemplate(pfc::match_params params, double z, double a, double b, double y, int resolution, bool left)
-    : params(params), resolution(resolution), left(left)
+    : params(std::move(params)), resolution(resolution), left(left)
     {
         GenerateTemplate(z, a, b, y);
     }
 
-    NeedleTemplate(pfc::match_params params, bool left)
+    NeedleTemplate(const pfc::match_params& params, bool left)
     : params(params), resolution(params.resolution), left(left)
     {
         GenerateTemplate(params.min_z, params.min_yaw, params.min_pitch, params.min_roll);
@@ -59,7 +60,7 @@ public:
      * @brief Deconstructor
      */
     ~NeedleTemplate()
-    {};
+    = default;
 };
 
 cv::Point2d CalcUVPoint(const cv::Mat& p, const cv::Mat& transform, const cv::Mat& projection);

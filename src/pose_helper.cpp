@@ -2,14 +2,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/sfm/triangulation.hpp>
 #include <eigen3/Eigen/Dense>
-#include <eigen3/Eigen/Core>
-#include "template_match.h"
 #include "pose_helper.h"
-#include "csv_reader.h"
 #include "needle_pose.h"
-#include "pfc_initializer_constants.h"
-
-using namespace std;
 
 //returns 3D location of point given two pixel space points from endoscope stereo camera
 cv::Point3d deProjectPoints(const cv::Mat& p_l, const cv::Mat& p_r, const cv::Mat& P_l, const cv::Mat& P_r)
@@ -38,7 +32,7 @@ cv::Point3d deProjectPoints(const cv::Mat& p_l, const cv::Mat& p_r, const cv::Ma
 }
 
 // Draws needle origin on image, given match and rotated/scaled template
-void drawNeedleOrigin(cv::Mat& img, cv::Point2d needle_origin, cv::Scalar color){
+void drawNeedleOrigin(cv::Mat& img, const cv::Point2d& needle_origin, const cv::Scalar& color){
     // Draw point
     cv::circle(img,
             needle_origin,
@@ -74,33 +68,5 @@ vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bo
     results.push_back(loc_err);
     results.push_back(angle_err);
     return results;
-}
-
-//Returns pose data from ground truth pose csv file for given pose id
-NeedlePose readTruePoseFromCSV(int pose_id)
-{
-	CSVReader reader("../positions/needle_positions.csv");
-    // Read all rows into vector
-    vector<vector<string> > all_pose_data = reader.getData();
-    // Select row for pose by pose_id
-    vector<string> pose_data = all_pose_data.at(pose_id);
-
-    NeedlePose pose;
-
-    // store location
-    pose.location.x = stod(pose_data.at(1));
-    pose.location.y = stod(pose_data.at(2));
-    pose.location.z = stod(pose_data.at(3));
-
-    //Store orientation
-    Eigen::Quaternionf q;
-    q.x() = stod(pose_data.at(4));
-    q.y() = stod(pose_data.at(5));
-    q.z() = stod(pose_data.at(6));
-    q.w() = stod(pose_data.at(7));
-
-    pose.setOrientation(q);
-
-    return pose;
 }
 

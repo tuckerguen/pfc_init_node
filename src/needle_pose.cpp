@@ -1,5 +1,6 @@
 #include <eigen3/Eigen/Dense>
 #include <iostream>
+#include <utility>
 #include "needle_pose.h"
 #include "pfc_initializer_constants.h"
 
@@ -28,3 +29,7 @@ void NeedlePose::print()
     Eigen::Quaternionf q = getQuaternionOrientation();
     printf("(x,y,z)=(%f,%f,%f)\n(r,p,y)=(%f,%f,%f)\n", location.x, location.y, location.z, orientation.x(), orientation.y(), orientation.z());
 }
+
+NeedlePose::NeedlePose(const cv::Point3d &location, Eigen::Vector3f orientation) :
+        location(location), orientation(std::move(orientation))
+{}

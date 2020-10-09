@@ -166,8 +166,7 @@ add_executable(pfc_init_node src/pfc_init_node.cpp
   src/needle_template.cpp 
   src/template_match.cpp
   src/pose_helper.cpp
-  src/csv_reader.cpp
-  src/matcher.cpp
+        src/matcher.cpp
 )
 
 ## Rename C++ executable without prefix

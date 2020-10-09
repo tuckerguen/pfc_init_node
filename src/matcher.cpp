@@ -1,13 +1,12 @@
 #include <future>
 #include <sys/sysinfo.h>
 #include <queue>
-#include <algorithm>
+#include <cmath>
 #include "needle_image.h"
 #include "needle_template.h"
 #include "template_match.h"
 #include "matcher.h"
-#include <sstream>
-#include <iterator>
+
 
 template <typename T, typename C>
 vector<T> pq_to_vector(priority_queue<T, vector<T>, C> pq)
@@ -34,7 +33,7 @@ double constrainAngle(double x){
 vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
 {
     // Record matching time
-    double t = (double)cv::getTickCount();
+    auto t = (double)cv::getTickCount();
 
     // Note: this "params" setup isn't necessary for final implementation.
     // This is only used to "cheat" the system by allowing for known poses
@@ -43,12 +42,12 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
     // rotation and scaling ranges and increments would just be
     // referenced directly from the PfcInitConstants.hpp file, or 
     // some other configuration file
-    double min_a = templ.params.min_yaw, max_a = templ.params.max_yaw;
-    double a_inc = templ.params.yaw_inc;
-    double min_b = templ.params.min_pitch, max_b = templ.params.max_pitch;
-    double b_inc = templ.params.pitch_inc;
-    double min_y = templ.params.min_roll, max_y = templ.params.max_roll;
-    double y_inc = templ.params.roll_inc;
+    double min_y = templ.params.min_yaw, max_y = templ.params.max_yaw;
+    double y_inc = templ.params.yaw_inc;
+    double min_p = templ.params.min_pitch, max_p = templ.params.max_pitch;
+    double p_inc = templ.params.pitch_inc;
+    double min_r = templ.params.min_roll, max_r = templ.params.max_roll;
+    double r_inc = templ.params.roll_inc;
     double min_z = templ.params.min_z, max_z = templ.params.max_z;
     double z_inc = templ.params.z_inc;
 
@@ -57,44 +56,37 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
     priority_queue<TemplateMatch, vector<TemplateMatch>, TemplateMatchComparator> best_matches;
     
     // For all z
-    for (int sz = 0; sz < (max_z-min_z)/z_inc; ++sz)
+    double z = min_z;
+    while(z < max_z)
     {
-        double tz = (double)cv::getTickCount();
-
-        // Calc z for this step
-        float z = min_z + (z_inc * sz);
-        // cout << z << endl;
-
-        // Fpr all yaw (a values)
-        for (double sa = 0; sa < (max_a-min_a)/a_inc; ++sa)
+        auto tz = (double)cv::getTickCount();
+        // Fpr all yaw (y values)
+        double y = min_y;
+        while(y < max_y)
         {
-            double ta = (double)cv::getTickCount();
-            float a = min_a + (a_inc * sa); 
-
-            //For all pitch (b values)
-            for (double sb = 0; sb < (max_b-min_b)/b_inc; ++sb)
-            {   
-                double tb= (double)cv::getTickCount();
-                float b = min_b + (b_inc * sb);
-                
-                // For all roll (y values)
-                for (double sy = 0; sy < (max_y-min_y)/y_inc; ++sy)
+            auto ta = (double)cv::getTickCount();
+            //For all pitch (p values)
+            double p = min_p;
+            while(p < max_p)
+            {
+                auto tb= (double)cv::getTickCount();
+                // For all roll (r values)
+                double r = min_r;
+                while(r < max_r)
                 {
-                    float y = min_y + (y_inc * sy);
-
                     // Generate Template
-                    templ.GenerateTemplate(z, a, b, y);
-                    // cout << a << ", " << b << ", " << y << endl;
+                    templ.GenerateTemplate(z, y, p, r);
+                    // cout << y << ", " << p << ", " << r << endl;
 
                     //Match rotated template to image
                     TemplateMatch new_match = getMatch(img, templ.image);
                     // Store other match details
                     new_match.z = z;
                     // TODO: Check neg/pos direction for pitch/roll 
-                    // new_match.yaw = a > 180 ? (a - 360) : a;
-                    new_match.yaw = constrainAngle(a);
-                    new_match.pitch = constrainAngle(b);
-                    new_match.roll = constrainAngle(y);
+                    // new_match.yaw = y > 180 ? (y - 360) : y;
+                    new_match.yaw = constrainAngle(y);
+                    new_match.pitch = constrainAngle(p);
+                    new_match.roll = constrainAngle(r);
                     // Offset the origin to sit in the correct location of the final image
                     new_match.origin = templ.origin + cv::Point2d(new_match.rect.x, new_match.rect.y);
 
@@ -113,15 +105,19 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
                         best_matches.push(new_match);
                     }
                     // Otherwise reject the match since it isn't in the top n scores
+                    r += r_inc;
                 }
                 // tb = ((double)cv::getTickCount() - tb) / cv::getTickFrequency();
-                // cout << "b step time: " << tb << " s" << endl;
+                // cout << "p step time: " << tb << " s" << endl;
+                p += p_inc;
             }
             // ta = ((double)cv::getTickCount() - ta) / cv::getTickFrequency();
-            // cout << "a step time: " << ta << " s" << endl;
+            // cout << "y step time: " << ta << " s" << endl;
+            y += y_inc;
         }
         // tz = ((double)cv::getTickCount() - tz) / cv::getTickFrequency();
         // cout << "Z step time: " << tz << " s" << endl;
+        z+= z_inc;
     }
 
     // t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
@@ -154,10 +150,10 @@ vector<TemplateMatch> matchThreaded(const cv::Mat& img, NeedleTemplate templ)
         templ.params.min_pitch = (min_val + tid * thread_inc);
         templ.params.max_pitch = min_val + (tid+1) * thread_inc;
 
-        //Round to correct decimal place (this rounds to 2 places, only works 
+        // Round to correct decimal place (this rounds to 2 places, only works
         // For increments of 2 decimal place as well)
-        templ.params.min_pitch = (float)((int) (templ.params.min_pitch*100+0.5))/100;
-        templ.params.max_pitch = (float)((int) (templ.params.max_pitch*100+0.5))/100;
+        templ.params.min_pitch = round(templ.params.min_pitch*100)/100;
+        templ.params.max_pitch = round(templ.params.max_pitch*100)/100;
 
         // Except first, shift range to avoid overlap
         if(tid != 0){
@@ -173,9 +169,8 @@ vector<TemplateMatch> matchThreaded(const cv::Mat& img, NeedleTemplate templ)
     for (auto &fut : futures) {
         vector<TemplateMatch> thread_matches = fut.get();
         
-        for(int i = 0; i < thread_matches.size(); i++)
+        for(const auto& m : thread_matches)
         {
-            TemplateMatch m = thread_matches.at(i);
             // If queue not full
             if (best_matches.size() < templ.params.num_matches)
             {

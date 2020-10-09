@@ -15,15 +15,6 @@
 cv::Point3d deProjectPoints(const cv::Mat& p_l, const cv::Mat& p_r, const cv::Mat& P_l, const cv::Mat& P_r);
 
 /**
- * @brief Returns coordinate location of needle in template after rotation and scaling transformation
- * 
- * @param angle Template was rotated by
- * @param scale Template was scaled to
- * @param templ Template used for match (gives initial origin and template size)
- */
-cv::Mat getRotatedOrigin(double angle, double scale, const NeedleTemplate* templ);
-
-/**
  * @brief draws needle origin on image, given match info and rotated/scaled template
  * 
  * @param img Image to draw the origin on
@@ -31,7 +22,7 @@ cv::Mat getRotatedOrigin(double angle, double scale, const NeedleTemplate* templ
  * @param color Color of the origin point to be drawn
  * @param templ The needle template used in matching
  */
-void drawNeedleOrigin(cv::Mat& img, cv::Point2d needle_origin, cv::Scalar color);
+void drawNeedleOrigin(cv::Mat& img, const cv::Point2d& needle_origin, const cv::Scalar& color);
 
 /**
  * @brief Prints and returns location and orientation error between given pose and ground truth
@@ -41,12 +32,5 @@ void drawNeedleOrigin(cv::Mat& img, cv::Point2d needle_origin, cv::Scalar color)
  * @param print If function should print score to console
  */
 vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bool print);
-
-/**
- * @brief Returns pose data from ground truth pose csv file for given pose id
- * 
- * @param pose_id The id number of the pose data to return
- */
-NeedlePose readTruePoseFromCSV(int pose_id);
 
 #endif

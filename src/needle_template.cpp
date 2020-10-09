@@ -1,14 +1,11 @@
 #include <opencv2/core.hpp>
-#include <string>
-#include <eigen3/Eigen/Core>
-#include <eigen3/Eigen/Dense>
 #include <opencv2/cudaimgproc.hpp>
 #include "needle_template.h"
 #include "pfc_initializer_constants.h"
 
 using namespace std;
 
-void NeedleTemplate::GenerateTemplate(float z, float a, float b, float y)
+void NeedleTemplate::GenerateTemplate(double z, double y, double p, double r)
 {
     // Array of needle points
     cv::Point2d needle_arc[resolution + 1];
@@ -17,17 +14,17 @@ void NeedleTemplate::GenerateTemplate(float z, float a, float b, float y)
     cv::Mat projection = left ? params.P_l : params.P_r;
 
     // Convert to radians
-    a = a * pfc::deg2rad;
-    b = b * pfc::deg2rad;
     y = y * pfc::deg2rad;
+    p = p * pfc::deg2rad;
+    r = r * pfc::deg2rad;
 
     // Transformation Matrix
     // Formula for general rotation matrix from: https://en.wikipedia.org/wiki/Rotation_matrix#General_rotations
-    cv::Mat transform = (cv::Mat_<double>(4,4) << 
-        cos(a)*cos(b), cos(a)*sin(b)*sin(y)-sin(a)*cos(y), cos(a)*sin(b)*cos(y)+sin(a)*sin(y),  0,
-        sin(a)*cos(b), sin(a)*sin(b)*sin(y)+cos(a)*cos(y), sin(a)*sin(b)*cos(y)-cos(a)*sin(y),  0,
-              -sin(b),                      cos(b)*sin(y),                      cos(b)*cos(y),  z,
-                    0,                                  0,                                  0,  1); 
+    cv::Mat transform = (cv::Mat_<double>(4,4) <<
+        cos(y)*cos(p), cos(y)*sin(p)*sin(r)-sin(y)*cos(r), cos(y)*sin(p)*cos(r)+sin(y)*sin(r),  0.0,
+        sin(y)*cos(p), sin(y)*sin(p)*sin(r)+cos(y)*cos(r), sin(y)*sin(p)*cos(r)-cos(y)*sin(r),  0.0,
+        -sin(p),                      cos(p)*sin(r),                        cos(p)*cos(r),         z,
+        0.0,                                  0.0,                                  0.0,        1.0);
 
     // To determine bounding box of needle for cropping
     double leftmost=640, rightmost=0, upmost=480, downmost=0;
@@ -92,7 +89,7 @@ void NeedleTemplate::GenerateTemplate(float z, float a, float b, float y)
     // // Run canny edge detection
     // cv::Canny( detected_edges, image, 40, 120, 3);
 
-    // cout << z << ", " << pfc::rad2deg*a << ", " << pfc::rad2deg*b << ", " << pfc::rad2deg*y << endl;
+    // cout << z << ", " << pfc::rad2deg*r << ", " << pfc::rad2deg*p << ", " << pfc::rad2deg*r << endl;
     // cv::namedWindow("templ");
     // cv::imshow("templ", image);
     // cv::waitKey(0);

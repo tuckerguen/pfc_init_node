@@ -9,8 +9,7 @@
 /**
  * @brief Class to localize needle from stereo images
  */
-class PfcInitializer
-{
+class PfcInitializer {
 private:
     /**
      * @brief Computes pose of needle from the left and right stereo images
@@ -20,17 +19,17 @@ private:
     /**
      * @brief Prints results of initilization to console
      */
-    void displayResults(NeedlePose true_pose);
+    void displayResults(const NeedlePose& true_pose);
 
 public:
     //Camera Projection Matrices
     // Left camera 
-    cv::Mat P_l; 
+    cv::Mat P_l;
     // Right camera 
     cv::Mat P_r;
 
-    double time;
-    
+    double time{};
+
     /**
      * @brief Left stereo image
      */
@@ -66,9 +65,8 @@ public:
      * @brief Constructor
      * TODO: Doc this once we decide on fields
      */
-    PfcInitializer(cv::Mat& P_l, cv::Mat& P_r, cv::Mat& l_img, cv::Mat& r_img, pfc::match_params params)
-        : P_l(P_l), P_r(P_r), l_img(l_img), r_img(r_img), left_templ(params, true), right_templ(params, false) 
-    {}
+    PfcInitializer(cv::Mat &P_l, cv::Mat &P_r, cv::Mat &l_img, cv::Mat &r_img, const pfc::match_params& params)
+            : P_l(P_l), P_r(P_r), l_img(l_img), r_img(r_img), left_templ(params, true), right_templ(params, false) {}
 
     /**
      * @brief Runs the initializer, stores the needle pose in initializer
@@ -76,7 +74,7 @@ public:
      * @param print_results If function should print results to console
      * @param multi_thread Use threaded version of match
      */
-    void run(bool print_results, bool multi_thread, NeedlePose true_pose);
+    void run(bool print_results, bool multi_thread, const NeedlePose& true_pose);
 
     /**
      * @brief Returns the results of initialization as a vector of vectors

@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Core>
+#include <utility>
 #include "pose_helper.h"
 #include "matcher.h"
 #include "pfc_initializer.h"
@@ -14,10 +15,10 @@ using namespace std;
 
 // Calculates needle pose from images (primary function for use in particle filter)
 // Stores pose in this object
-void PfcInitializer::run(bool print_results, bool multi_thread, NeedlePose true_pose)
+void PfcInitializer::run(bool print_results, bool multi_thread, const NeedlePose& true_pose)
 {
     // Start timer
-    double t = (double)cv::getTickCount();
+    auto t = (double)cv::getTickCount();
 
     computeNeedlePose(multi_thread);
     
@@ -83,11 +84,11 @@ void PfcInitializer::computeNeedlePose(bool multi_thread)
         Eigen::Vector3f orientation(avg_roll, avg_pitch, avg_yaw);
 
         // Store location/orientation
-        poses.push_back(NeedlePose(location, orientation));
+        poses.emplace_back(location, orientation);
     }
 }
 
-void PfcInitializer::displayResults(NeedlePose true_pose)
+void PfcInitializer::displayResults(const NeedlePose& true_pose)
 {
     // Draw matches onto images
     for(int i = 0; i < l_matches.size(); i++)
@@ -101,7 +102,7 @@ void PfcInitializer::displayResults(NeedlePose true_pose)
         imshow("l", match_l.templ);
         imshow("r",match_r.templ);
 
-        printf("%f, %f == %f\n", match_l.pitch, match_r.pitch, true_pose.getEulerAngleOrientation().y());
+//        printf("%f, %f == %f\n", match_l.pitch, match_r.pitch, true_pose.getEulerAngleOrientation().y());
 
         cv::waitKey(0);
         // match_l.templ.copyTo(l_img.raw.rowRange(match_l.rect.x,match_l.rect.x+match_l.rect.width), l_img.raw.colRange(match_l.rect.y, match_l.rect.y+match_l.rect.height));
@@ -164,9 +165,9 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     results.push_back(to_string(left_templ.params.num_matches));
 
     // Score results
-    for(int i = 0; i < poses.size(); i++)
+    for(auto & i : poses)
     {
-        NeedlePose* pose = &poses.at(i);
+        NeedlePose* pose = &i;
         vector<double> score = scorePoseEstimation(*pose, true_pose, false);
         pose->loc_err = score.at(0);
         pose->rot_err = score.at(1);
@@ -175,10 +176,8 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     // Sort results
     std::sort(poses.begin(), poses.end());
 
-    for(int i = 0; i < poses.size(); i++)
+    for(const auto& pose : poses)
     {
-        NeedlePose pose = poses.at(i);
-
         // Add time
         results.push_back(to_string(time));
 
