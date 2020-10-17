@@ -47,7 +47,7 @@ For each individual axis rotation, there is no rotation in the other 2 axes.
 
 
 
-## Incrementing Metrics
+## Determining Increment Values and Candidate Point Number
 There are four parameters that have the greatest effect on performance when running the particle filter auto-initialization:  
 * Yaw, Pitch, and Roll increments  (from min to max value, how much to increment for each template matching iteration)  
 * Number of candidate points to return (Top n candidate points based on template matching score)  
