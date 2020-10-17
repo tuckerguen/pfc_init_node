@@ -4,7 +4,6 @@
 #include <opencv2/core.hpp>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Core>
-#include <utility>
 #include "pose_helper.h"
 #include "matcher.h"
 #include "pfc_initializer.h"
@@ -132,10 +131,6 @@ void PfcInitializer::displayResults(const NeedlePose& true_pose)
 
 vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
 {
-    Eigen::Vector3f o = poses.at(0).getEulerAngleOrientation();
-    Eigen::Vector3f t = true_pose.getEulerAngleOrientation();
-    printf("%f, %f, %f == %f, %f, %f\n", o.x(), o.y(), o.z(), t.x(), t.y(), t.z());
-
     vector<string> results;
     // Add true pose
     results.push_back(to_string(true_pose.location.x));
@@ -165,9 +160,12 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     results.push_back(to_string(left_templ.params.num_matches));
 
     // Score results
-    for(auto & i : poses)
+    for(auto & p : poses)
     {
-        NeedlePose* pose = &i;
+		Eigen::Vector3f o = p.getEulerAngleOrientation();
+		Eigen::Vector3f t = true_pose.getEulerAngleOrientation();
+		printf("%f, %f, %f == %f, %f, %f\n", o.x(), o.y(), o.z(), t.x(), t.y(), t.z());
+        NeedlePose* pose = &p;
         vector<double> score = scorePoseEstimation(*pose, true_pose, false);
         pose->loc_err = score.at(0);
         pose->rot_err = score.at(1);

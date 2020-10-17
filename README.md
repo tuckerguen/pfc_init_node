@@ -40,9 +40,9 @@ For each individual axis rotation, there is no rotation in the other 2 axes.
 
 | Axis                                                	| Location Error (mm) | Rotation Error (deg) | Execution Time (s) |
 |-------------------------------------------------------|----------      |-----           |----            | 
-| Yaw                                                   | 1.6711       |   4.6892    |  1.357             | 
-| Pitch                                                 | 2.9311       |   11.2032   |  1.6305        | 
-| Roll                                                  | 2.9620       |   5.2490    |  1.4833      | 
+| Yaw                                                   | 1.6711       |   4.6892    |               | 
+| Pitch                                                 | 4.1667       |   12.2309  |       | 
+| Roll                                                  | 2.9620       |   5.2490    |       | 
 | All                                                   | 4.8257       |   69.3441   |  13.5491     |
 
 
@@ -66,27 +66,18 @@ The following tests were conducted with fixed parameters of:
 | # Candidate points (if not measured metric)   | 10
 | Candidate choice for each pose                            | Min error for metric          |
 
-*A note about execution time*: The execution time indicated here is for rotating on a single axis at a time and 
-is therefore not indicative of overall performance. When rotating on all three axes, the number of iterations, and 
-in turn the execution time is multiplicative (except in the case of candidate point generation which occurs once per run)
-The plots are just there to indicate the effect of each on execution time in general.
-
 ### Yaw Increment
-![Yaw increment vs Location error](imgs/yaw_inc_vs_time1.jpeg)  
 ![Yaw increment vs Location error](imgs/yaw_inc_vs_loc_err1.jpeg)  
 ![Yaw increment vs Location error](imgs/yaw_inc_vs_rot_err1.jpeg)  
 
 ### Pitch Increment
-![pitch increment vs Location error](imgs/pitch_inc_vs_time1.jpeg)  
 ![pitch increment vs Location error](imgs/pitch_inc_vs_loc_err1.jpeg)  
 ![pitch increment vs Location error](imgs/pitch_inc_vs_rot_err1.jpeg)  
 
 ### Roll Increment
-![roll increment vs Location error](imgs/roll_inc_vs_time1.jpeg)  
 ![roll increment vs Location error](imgs/roll_inc_vs_loc_err1.jpeg)  
 ![roll increment vs Location error](imgs/roll_inc_vs_rot_err1.jpeg)  
 
-### Candidate Point Metrics
-![num_cand_pts increment vs Location error](imgs/num_cand_pts_vs_time1.jpeg)  
+### Candidate Point Metrics 
 ![num_cand_pts increment vs Location error](imgs/num_cand_pts_vs_loc_err1.jpeg)  
 ![num_cand_pts increment vs Location error](imgs/num_cand_pts_vs_rot_err1.jpeg)  

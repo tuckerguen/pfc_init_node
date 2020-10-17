@@ -132,10 +132,10 @@ vector<TemplateMatch> matchThreaded(const cv::Mat& img, NeedleTemplate templ)
     priority_queue<TemplateMatch, vector<TemplateMatch>, TemplateMatchComparator> best_matches;
     std::vector<std::future<vector<TemplateMatch>>> futures;
 
-    // Get z range
+    // Get range
     double max_val = templ.params.max_pitch;
     double min_val = templ.params.min_pitch;
-    double val_inc = templ.params.pitch_inc;
+    double inc_val = templ.params.pitch_inc;
 
     // Calc num threads and scale increment between sequential threads
     int num_threads = get_nprocs();
@@ -148,16 +148,21 @@ vector<TemplateMatch> matchThreaded(const cv::Mat& img, NeedleTemplate templ)
     {
         // Compute thread range
         templ.params.min_pitch = (min_val + tid * thread_inc);
-        templ.params.max_pitch = min_val + (tid+1) * thread_inc;
 
-        // Round to correct decimal place (this rounds to 2 places, only works
+        // Account for edge case max_pitch / num_threads == pitch_inc, threads do nothing
+		if(max_val/ (double)num_threads == inc_val)
+        	templ.params.max_pitch = min_val + (tid+1) * thread_inc + 1;
+		else
+			templ.params.max_pitch = min_val + (tid+1) * thread_inc;
+
+		// Round to correct decimal place (this rounds to 2 places, only works
         // For increments of 2 decimal place as well)
         templ.params.min_pitch = round(templ.params.min_pitch*100)/100;
         templ.params.max_pitch = round(templ.params.max_pitch*100)/100;
 
         // Except first, shift range to avoid overlap
         if(tid != 0){
-            templ.params.min_pitch += val_inc;
+            templ.params.min_pitch += inc_val;
         }
 
         // Launch thread and collect future
