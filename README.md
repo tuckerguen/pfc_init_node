@@ -32,7 +32,7 @@ Run with parameters:
 | Number of random poses                           	        | 50      	|
 | Candidate choice for each pose                            | Min error for metric |
 
-These parameters for these were picked based on the [Incrementing Metrics](#Incrementing Metrics) data, choosing the values
+These parameters for these were picked based on the [Incrementing Metrics](#incrementing-metrics) data, choosing the values
 that maximized performance while minimizing runtime.  
   
 For each individual axis rotation, there is no rotation in the other 2 axes.
