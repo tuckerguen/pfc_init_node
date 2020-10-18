@@ -96,14 +96,14 @@ void PfcInitializer::displayResults(const NeedlePose& true_pose)
         TemplateMatch match_r = r_matches.at(i);
         int color_inc = 255/l_matches.size();
 
-        cv::namedWindow("l", CV_WINDOW_AUTOSIZE);
-        cv::namedWindow("r", CV_WINDOW_AUTOSIZE);
-        imshow("l", match_l.templ);
-        imshow("r",match_r.templ);
+//        cv::namedWindow("l", CV_WINDOW_AUTOSIZE);
+//        cv::namedWindow("r", CV_WINDOW_AUTOSIZE);
+//        imshow("l" + to_string(i), match_l.templ);
+//        imshow("r" + to_string(i),match_r.templ);
 
 //        printf("%f, %f == %f\n", match_l.pitch, match_r.pitch, true_pose.getEulerAngleOrientation().y());
 
-        cv::waitKey(0);
+//        cv::waitKey(0);
         // match_l.templ.copyTo(l_img.raw.rowRange(match_l.rect.x,match_l.rect.x+match_l.rect.width), l_img.raw.colRange(match_l.rect.y, match_l.rect.y+match_l.rect.height));
         // match_r.templ.copyTo(r_img.raw.rowRange(match_r.rect.x,match_r.rect.x+match_r.rect.width), r_img.raw.colRange(match_r.rect.y, match_r.rect.y+match_r.rect.height));
         match_l.drawOnImage(l_img.raw, cv::Scalar(i*color_inc, 255-i*color_inc, 180));

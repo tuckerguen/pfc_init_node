@@ -23,7 +23,7 @@ void NeedleTemplate::GenerateTemplate(double z, double y, double p, double r)
     cv::Mat transform = (cv::Mat_<double>(4,4) <<
         cos(y)*cos(p), cos(y)*sin(p)*sin(r)-sin(y)*cos(r), cos(y)*sin(p)*cos(r)+sin(y)*sin(r),  0.0,
         sin(y)*cos(p), sin(y)*sin(p)*sin(r)+cos(y)*cos(r), sin(y)*sin(p)*cos(r)-cos(y)*sin(r),  0.0,
-        -sin(p),                      cos(p)*sin(r),                        cos(p)*cos(r),         z,
+        -sin(p),                      cos(p)*sin(r),                        cos(p)*cos(r),        z,
         0.0,                                  0.0,                                  0.0,        1.0);
 
     // To determine bounding box of needle for cropping
@@ -90,9 +90,8 @@ void NeedleTemplate::GenerateTemplate(double z, double y, double p, double r)
     // cv::Canny( detected_edges, image, 40, 120, 3);
 
     // cout << z << ", " << pfc::rad2deg*r << ", " << pfc::rad2deg*p << ", " << pfc::rad2deg*r << endl;
-    // cv::namedWindow("templ");
-    // cv::imshow("templ", image);
-    // cv::waitKey(0);
+//     cv::namedWindow("templ" + to_string(y)+ to_string(p)+ to_string(r));
+//     cv::imshow("templ" + to_string(y)+ to_string(p)+ to_string(r), image);
 }
 
 cv::Point2d CalcUVPoint(const cv::Mat& p, const cv::Mat& transform, const cv::Mat& projection)

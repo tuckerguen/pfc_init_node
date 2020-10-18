@@ -8,6 +8,7 @@
 #include "matcher.h"
 
 
+
 template <typename T, typename C>
 vector<T> pq_to_vector(priority_queue<T, vector<T>, C> pq)
 {
@@ -76,8 +77,6 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
                 {
                     // Generate Template
                     templ.GenerateTemplate(z, y, p, r);
-                    // cout << y << ", " << p << ", " << r << endl;
-
                     //Match rotated template to image
                     TemplateMatch new_match = getMatch(img, templ.image);
                     // Store other match details
@@ -155,6 +154,7 @@ vector<TemplateMatch> matchThreaded(const cv::Mat& img, NeedleTemplate templ)
 		else
 			templ.params.max_pitch = min_val + (tid+1) * thread_inc;
 
+		cout << templ.params.max_pitch << endl;
 		// Round to correct decimal place (this rounds to 2 places, only works
         // For increments of 2 decimal place as well)
         templ.params.min_pitch = round(templ.params.min_pitch*100)/100;

@@ -31,3 +31,15 @@ NonPlanar Rotation:
     
     Fixed increment, non-planar rotation (roll and pitch):
         # cand pts
+
+# Performance Notes
+Individually, each axis does quite well, within a good tolerance. So checking for one axis when the needle is only changing
+on that one axis works really well.
+
+Once we add in checking for all axes, even if only one axis is changing, we still see a significant decrease in performance
+
+# Difficult cases
+The most difficult cases appear to be "edge-on" or really close needles. The side on ones and close ones share a similar
+problem where all the father away ("smaller") needles that are edge-on match really well. So the majority of candidate
+points are really bad, and it's just a matter of probability as to whether or not the closest match actually has the
+best matching score.

@@ -38,13 +38,12 @@ that maximized performance while minimizing runtime.
 For each individual axis rotation, there is no rotation in the other 2 axes.
 ### Results
 
-| Axis                                                	| Location Error (mm) | Rotation Error (deg) | Execution Time (s) |
-|-------------------------------------------------------|----------      |-----           |----            | 
-| Yaw                                                   | 1.6711       |   4.6892    |               | 
-| Pitch                                                 | 4.1667       |   12.2309  |       | 
-| Roll                                                  | 2.9620       |   5.2490    |       | 
-| All                                                   | 4.8257       |   69.3441   |  13.5491     |
-
+| Axis                                                	| Location Error (mm) | Rotation Error (deg) | Execution Time (s)
+|-------------------------------------------------------|----------      |-----                  |----
+| Yaw                                                   | 1.6711       |   4.6892    |  0.3936            
+| Pitch                                                 | 4.1667       |   12.2309   |       
+| Roll                                                  | 2.9620       |   5.2490    |       
+| All                                                   | 33.1951      |   64.6575   | 54.1069s
 
 
 ## Determining Increment Values and Candidate Point Number
