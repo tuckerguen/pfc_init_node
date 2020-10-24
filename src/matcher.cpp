@@ -154,7 +154,7 @@ vector<TemplateMatch> matchThreaded(const cv::Mat& img, NeedleTemplate templ)
 		else
 			templ.params.max_pitch = min_val + (tid+1) * thread_inc;
 
-		cout << templ.params.max_pitch << endl;
+//		cout << templ.params.max_pitch << endl;
 		// Round to correct decimal place (this rounds to 2 places, only works
         // For increments of 2 decimal place as well)
         templ.params.min_pitch = round(templ.params.min_pitch*100)/100;

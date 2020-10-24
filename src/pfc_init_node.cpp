@@ -19,7 +19,16 @@
 
 using namespace std;
 
-void writeDataListToCSV(vector<vector<string>> dataList, string time_str) {
+struct pose_bounds {
+  float xmin;
+  float xmax;
+  float ymin;
+  float ymax;
+  float zmin;
+  float zmax;
+};
+
+void writeDataListToCSV(vector<vector<string>> dataList, const string& time_str) {
 	ofstream data_file;
 
 	std::string path = ros::package::getPath("pfc_init");
@@ -68,6 +77,167 @@ float rng(float min, float max) {
 	return dist(gen);
 }
 
+vector<vector<string>> create_csv_vec(int num_cand_pts){
+	vector<string> csv_key_base
+		{
+			"time", "loc_err", "rot_err"
+			//, "est_loc_x", "est_loc_y", "est_loc_z", "est_rot_x", "est_rot_y", "est_rot_z", "est_rot_w",
+		};
+	vector<string> csv_key
+		{
+			"true_loc_x", "true_loc_y", "true_loc_z", "true_rot_x", "true_rot_y", "true_rot_z", "true_rot_w",
+			"yaw_min", "yaw_max", "yaw_inc",
+			"roll_min", "roll_max", "roll_inc",
+			"pitch_min", "pitch_max", "pitch_inc",
+			"z_min", "z_max", "z_inc", "num_cand_pts"
+		};
+	for (int i = 0; i < num_cand_pts; i++) {
+		csv_key.insert(csv_key.end(), csv_key_base.begin(), csv_key_base.end());
+	}
+	vector<vector<string>> all_results;
+	all_results.insert(all_results.begin(), csv_key);
+	return all_results;
+}
+
+string get_time_str(){
+	/* Get current time as string for naming test file */
+	auto now = std::chrono::system_clock::now();
+	auto in_time_t = std::chrono::system_clock::to_time_t(now);
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X");
+	string time = ss.str();
+	return time;
+}
+
+/**
+ * Generate num_poses needle poses randomly within bounds
+ * @param num_poses number poses to generate
+ * @param axes vector of logical values for which axes to generate rotations on <roll, pitch, yaw>
+ * @return list of geometry_msgs::Pose
+ */
+vector<geometry_msgs::Pose> generate_poses(int num_poses, pose_bounds pb, vector<bool> axes){
+	vector<geometry_msgs::Pose> poses;
+	for (int i = 0; i < num_poses; i++) {
+		geometry_msgs::Pose test_pose;
+		test_pose.position.x = rng(pb.xmin, pb.xmax);
+		test_pose.position.y = rng(pb.ymin, pb.ymax);
+		test_pose.position.z = rng(pb.zmin, pb.zmax);
+
+//		//http://planning.cs.uiuc.edu/node198.html
+//		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
+//		test_pose.orientation.y = sqrt(1 - u)*cos(2*M_PI*v);
+//		test_pose.orientation.z = sqrt(u)*sin(2*M_PI*w);
+//		test_pose.orientation.w = sqrt(u)*cos(2*M_PI*w);
+//		test_pose.orientation.x = sqrt(1 - u)*sin(2*M_PI*v);
+
+		 Eigen::Quaternionf q;
+		 q = Eigen::AngleAxisf(rng(0, 2 * M_PI) * axes.at(0), Eigen::Vector3f::UnitX()) //roll
+		 	* Eigen::AngleAxisf(rng(0, 2 * M_PI) * axes.at(1), Eigen::Vector3f::UnitY()) //pitch
+		 	* Eigen::AngleAxisf(rng(0, 2 * M_PI) * axes.at(2), Eigen::Vector3f::UnitZ()); //yaw
+		 test_pose.orientation.x = q.x();
+		 test_pose.orientation.y = q.y();
+		 test_pose.orientation.z = q.z();
+		 test_pose.orientation.w = q.w();
+
+		poses.push_back(test_pose);
+	}
+	return poses;
+}
+
+void set_sim_needle_pose(geometry_msgs::Pose pose, ros::NodeHandle* nh){
+	// Update needle pose in Gazebo sim
+	gazebo_msgs::ModelState modelstate;
+	modelstate.model_name = (string)"needle";
+	modelstate.reference_frame = (string)"world";
+	modelstate.pose = pose;
+	ros::ServiceClient client = nh->serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
+	gazebo_msgs::SetModelState setmodelstate;
+	setmodelstate.request.model_state = modelstate;
+	client.call(setmodelstate);
+}
+
+geometry_msgs::Pose get_sim_needle_pose(ros::NodeHandle* nh){
+	// Get Simulation Needle Pose
+	gazebo_msgs::ModelStates model_states = *(
+		ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states", *nh)
+	);
+
+	for(int n =  0; n < model_states.name.size(); n++){
+		if (model_states.name[n] == "needle"){
+			return model_states.pose[n];
+		}
+	}
+}
+
+vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geometry_msgs::Pose> poses, ros::NodeHandle* nh,
+									cv::Mat P_l, cv::Mat P_r, vector<vector<string>> all_results,
+									bool test_candpts, bool display_imgs){
+	 // Loop over all options of some variable we want to test performance of
+	 // If not testing variable candidate point numbers
+	 int start_candpts = 30;
+	 max_cand_pts = test_candpts ? max_cand_pts : start_candpts;
+	 for(int cand_pts = start_candpts; cand_pts <= max_cand_pts; cand_pts += 5)
+	 {
+	 	cout << cand_pts << endl;
+
+		// Run initialization on all poses
+		for (int i = 0; i < num_poses; i++) {
+			cout << i << endl;
+			set_sim_needle_pose(poses.at(i), nh);
+			geometry_msgs::Pose needle_pose = get_sim_needle_pose(nh);
+
+			// Convert geometry_msgs::Pose to NeedlePose
+			Eigen::Quaternionf
+				q(needle_pose.orientation.w,
+				  needle_pose.orientation.x,
+				  needle_pose.orientation.y,
+				  needle_pose.orientation.z);
+			cv::Point3d loc(needle_pose.position.x, needle_pose.position.y, needle_pose.position.z);
+			NeedlePose true_pose(loc, q);
+
+			ros::spinOnce();
+
+			if(display_imgs) {
+				// Display retrieved images
+				 cv::namedWindow("l");
+				 cv::imshow("l", l_img);
+				 cv::waitKey(0);
+
+				 cv::namedWindow("r");
+				 cv::imshow("r", r_img);
+				 cv::waitKey(0);
+			}
+
+
+			/* Configure Match Parameters */
+			pfc::match_params params = {
+				0, 1, 30, //yaw
+				0, 360, 30, //pitch
+				0, 1, 30, //roll
+				0.07, 0.18, 0.01, //z
+				cand_pts, // # candidate points to return
+				10, // # points in needle line
+				P_l,
+				P_r
+			};
+
+			/** Create and run initializer */
+			PfcInitializer pfc_init(P_l, P_r, l_img, r_img, params);
+			pfc_init.run(false, true, true_pose);
+
+			// Write test data to csv file
+			vector<string> results = pfc_init.getResultsAsVector(true_pose);
+
+			// Add arbitrary large number for all the remaining candidate points not collected for this run
+			int diff = 3 * (max_cand_pts - cand_pts);
+			vector<string> addtl(diff, "100000");
+			results.insert(results.end(), addtl.begin(), addtl.end());
+			all_results.push_back(results);
+		}
+	 }
+	 return all_results;
+}
+
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "pfc_init_node");
 
@@ -89,154 +259,28 @@ int main(int argc, char **argv) {
 	cv::Mat P_l = cv::Mat(3, 4, CV_64FC1, (void *)l_inf.P.data());
 	cv::Mat P_r = cv::Mat(3, 4, CV_64FC1, (void *)r_inf.P.data());
 
-	/* Configure csv key (first row in the csv) */
-	int max_cand_pts = 30;
-	vector<string> csv_key_base
-		{
-			"time", "loc_err", "rot_err"
-			//, "est_loc_x", "est_loc_y", "est_loc_z", "est_rot_x", "est_rot_y", "est_rot_z", "est_rot_w",
-		};
-	vector<string> csv_key
-		{
-			"true_loc_x", "true_loc_y", "true_loc_z", "true_rot_x", "true_rot_y", "true_rot_z", "true_rot_w",
-			"yaw_min", "yaw_max", "yaw_inc",
-			"roll_min", "roll_max", "roll_inc",
-			"pitch_min", "pitch_max", "pitch_inc",
-			"z_min", "z_max", "z_inc", "num_cand_pts"
-		};
-	for (int i = 0; i < max_cand_pts; i++) {
-		csv_key.insert(csv_key.end(), csv_key_base.begin(), csv_key_base.end());
-	}
-	vector<vector<string>> all_results;
-	all_results.insert(all_results.begin(), csv_key);
 
-	/* Get current time as string for naming test file */
-	auto now = std::chrono::system_clock::now();
-	auto in_time_t = std::chrono::system_clock::to_time_t(now);
-	std::stringstream ss;
-	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%X");
-	string time = ss.str();
-
+	/** Pose Generation Configurations */
 	/* Needle position boundaries */
-	float x_min = -0.045, x_max = 0.045;
-	float y_min = -0.035, y_max = 0.02;
-	float z_min = 0.07, z_max = 0.13;
+	pose_bounds pb = {
+		 -0.045,  0.045, //x bounds
+		 -0.035,  0.02, // y bounds
+		 0.07, 0.13 // z bounds
+	};
+
+	int max_cand_pts = 30; // TODO: Move to input parameter
+
+	/* Configure csv key (first row in the csv) */
+	vector<vector<string>> csv_base = create_csv_vec(max_cand_pts);
+	string time = get_time_str();
 
 	/* Generate set of random poses */
 	int num_poses = 50;
-	vector<geometry_msgs::Pose> poses;
-	for (int i = 0; i < num_poses; i++) {
-		geometry_msgs::Pose test_pose;
-		test_pose.position.x = rng(x_min, x_max);
-		test_pose.position.y = rng(y_min, y_max);
-		test_pose.position.z = rng(z_min, z_max);
+	// roll, pitch, yaw
+	vector<bool> axes{false, false, true};
+	vector<geometry_msgs::Pose> poses = generate_poses(num_poses, pb, axes);
 
-		//http://planning.cs.uiuc.edu/node198.html
-		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
-		test_pose.orientation.y = sqrt(1 - u)*cos(2*M_PI*v);
-		test_pose.orientation.z = sqrt(u)*sin(2*M_PI*w);
-		test_pose.orientation.w = sqrt(u)*cos(2*M_PI*w);
-		test_pose.orientation.x = sqrt(1 - u)*sin(2*M_PI*v);
-
-		// For testing only one rotation
-//		 double radians = pfc::deg2rad * rng(0,360);
-//		 Eigen::Quaternionf q;
-//		 q = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX()) //roll
-//		 	* Eigen::AngleAxisf(radians, Eigen::Vector3f::UnitY()) //pitch
-//		 	* Eigen::AngleAxisf(0, Eigen::Vector3f::UnitZ()); //yaw
-//		 test_pose.orientation.x = q.x();
-//		 test_pose.orientation.y = q.y();
-//		 test_pose.orientation.z = q.z();
-//		 test_pose.orientation.w = q.w();
-
-		poses.push_back(test_pose);
-	}
-
-	// Loop over all options of some variable we want to test performance of
-//	 for(int inc = 30; inc <= 35; inc+=5)
-//	 {
-//	 	cout << inc << endl;
-	// 	if(cand_pts == 6)
-
-		// The number of candidate points to generate
-		// NOTE: Should be equal to max_cand_pts unless you're testing variations
-		// in candidate point numbers
-		int cand_pts = max_cand_pts;
-
-		// Run initialization on all poses
-		for (int i = 0; i < num_poses; i++) {
-			cout << i << endl;
-
-			// Update needle pose in Gazebo sim
-			gazebo_msgs::ModelState modelstate;
-			modelstate.model_name = (string)"needle";
-			modelstate.reference_frame = (string)"world";
-			modelstate.pose = poses.at(i);
-			ros::ServiceClient client = nh.serviceClient<gazebo_msgs::SetModelState>("/gazebo/set_model_state");
-			gazebo_msgs::SetModelState setmodelstate;
-			setmodelstate.request.model_state = modelstate;
-			client.call(setmodelstate);
-
-			// Get Simulation Needle Pose
-			gazebo_msgs::ModelStates model_states = *(
-				ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states", nh)
-			);
-
-			geometry_msgs::Pose needle_pose;
-			for(int n =  0; n < model_states.name.size(); n++){
-				if (model_states.name[n] == "needle"){
-					needle_pose = model_states.pose[n];
-				}
-			}
-
-			// Convert geometry_msgs::Pose to NeedlePose
-			Eigen::Quaternionf
-				q(needle_pose.orientation.w,
-				  needle_pose.orientation.x,
-				  needle_pose.orientation.y,
-				  needle_pose.orientation.z);
-			cv::Point3d loc(needle_pose.position.x, needle_pose.position.y, needle_pose.position.z);
-			NeedlePose true_pose(loc, q);
-
-			ros::spinOnce();
-
-			/*
-			// Display retrieved images
-			// cv::namedWindow("l");
-			// cv::imshow("l", l_img);
-			// cv::waitKey(0);
-
-			// cv::namedWindow("r");
-			// cv::imshow("r", r_img);
-			// cv::waitKey(0);
-			*/
-
-			/* Configure Match Parameters */
-			pfc::match_params params = {
-				0, 360, 30, //yaw
-				0, 360, 30, //pitch
-				0, 360, 30, //roll
-				0.07, 0.18, 0.01, //z
-				cand_pts, // # candidate points to return
-				10, // # points in needle line
-				P_l,
-				P_r
-			};
-
-			/** Create and run initializer */
-			PfcInitializer pfc_init(P_l, P_r, l_img, r_img, params);
-			pfc_init.run(false, true, true_pose);
-
-			// Write test data to csv file
-			vector<string> results = pfc_init.getResultsAsVector(true_pose);
-
-			// Add arbitrary large number for all the remaining candidate points not collected for this run
-			int diff = 3 * (max_cand_pts - cand_pts);
-			vector<string> addtl(diff, "100000");
-			results.insert(results.end(), addtl.begin(), addtl.end());
-			all_results.push_back(results);
-		}
-//	 }
+	vector<vector<string>> all_results = run_on_poses(max_cand_pts, num_poses, poses, &nh, P_l, P_r, csv_base, false, false);
 
 	writeDataListToCSV(all_results, time);
 

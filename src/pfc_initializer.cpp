@@ -164,7 +164,7 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     {
 		Eigen::Vector3f o = p.getEulerAngleOrientation();
 		Eigen::Vector3f t = true_pose.getEulerAngleOrientation();
-		printf("%f, %f, %f == %f, %f, %f\n", o.x(), o.y(), o.z(), t.x(), t.y(), t.z());
+//		printf("%f, %f, %f == %f, %f, %f\n", o.x(), o.y(), o.z(), t.x(), t.y(), t.z());
         NeedlePose* pose = &p;
         vector<double> score = scorePoseEstimation(*pose, true_pose, false);
         pose->loc_err = score.at(0);
