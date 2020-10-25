@@ -2,6 +2,7 @@
 #define POSE_HELPER_H
 
 #include <opencv2/core.hpp>
+#include <eigen3/Eigen/Dense>
 #include "template_match.h"
 #include "needle_template.h"
 #include "needle_pose.h"
@@ -32,5 +33,10 @@ void drawNeedleOrigin(cv::Mat& img, const cv::Point2d& needle_origin, const cv::
  * @param print If function should print score to console
  */
 vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bool print);
+
+double constrainAngle(double x, bool is_deg);
+
+Eigen::Vector3d constrainVector(Eigen::Vector3d v, bool is_deg);
+
 
 #endif

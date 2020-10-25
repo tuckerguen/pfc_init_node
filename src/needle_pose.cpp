@@ -3,33 +3,42 @@
 #include <utility>
 #include "needle_pose.h"
 #include "pfc_initializer_constants.h"
+#include "pose_helper.h"
 
 using namespace std;
 
-//Return the orientation in quaternion representation
-Eigen::Quaternionf NeedlePose::getQuaternionOrientation()
-{
-    // convert orientation from degrees to radians
-    double roll_radians = pfc::deg2rad * orientation.x();
-    double pitch_radians = pfc::deg2rad * orientation.y();
-    double yaw_radians = pfc::deg2rad * orientation.z();
+void NeedlePose::setOrientation(Eigen::Vector3d new_orientation) {
+	orientation = constrainVector(new_orientation, false);
+}
 
-    // Convert euler angles to quaternion
-    Eigen::Quaternionf q;
-    q = Eigen::AngleAxisf(roll_radians, Eigen::Vector3f::UnitX())
-        * Eigen::AngleAxisf(pitch_radians, Eigen::Vector3f::UnitY())
-        * Eigen::AngleAxisf(yaw_radians, Eigen::Vector3f::UnitZ());
-    
-    return q;
+void NeedlePose::setOrientation(Eigen::Quaterniond q) {
+	// convert to euler angles
+	// NOTE: The first value of eulerAngles() is constrained from [0,PI], not [-PI,PI], so
+	// converting rpy to quaternion to rpy may yield different rpy values than the original.
+	// The rotation will be the same and the conversion to a quaternion will be the same as well.
+	orientation = constrainVector(q.toRotationMatrix().eulerAngles(0, 1, 2), false);
+}
+
+Eigen::Vector3d NeedlePose::getEulerAngleOrientation() {
+	return constrainVector(orientation, false);
+}
+
+//Return the orientation in quaternion representation
+Eigen::Quaterniond NeedlePose::getQuaternionOrientation() {
+	// Convert euler angles to quaternion
+	return Eigen::Quaterniond(
+		Eigen::AngleAxisd(orientation.x(), Eigen::Vector3d::UnitX())
+		*Eigen::AngleAxisd(orientation.y(), Eigen::Vector3d::UnitY())
+		*Eigen::AngleAxisd(orientation.z(), Eigen::Vector3d::UnitZ()));
 }
 
 // Format and print the location and orientation
 void NeedlePose::print()
 {
-    Eigen::Quaternionf q = getQuaternionOrientation();
+    Eigen::Quaterniond q = getQuaternionOrientation();
     printf("(x,y,z)=(%f,%f,%f)\n(r,p,y)=(%f,%f,%f)\n", location.x, location.y, location.z, orientation.x(), orientation.y(), orientation.z());
 }
 
-NeedlePose::NeedlePose(const cv::Point3d &location, Eigen::Vector3f orientation) :
+NeedlePose::NeedlePose(const cv::Point3d &location, Eigen::Vector3d orientation) :
         location(location), orientation(std::move(orientation))
 {}

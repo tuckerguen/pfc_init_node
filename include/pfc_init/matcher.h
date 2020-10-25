@@ -1,3 +1,6 @@
+#ifndef MATCHER_H
+#define MATCHER_H
+
 #include "needle_template.h"
 #include "template_match.h"
 #include <queue>
@@ -27,3 +30,5 @@ vector<TemplateMatch> matchThreaded(const cv::Mat& img, NeedleTemplate templ);
  */
 TemplateMatch getMatch(const cv::Mat &img, const cv:: Mat& templ);
 
+
+#endif

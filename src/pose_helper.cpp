@@ -50,11 +50,11 @@ vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bo
     double loc_err = 1000*cv::norm(result_loc - true_loc);
 
     // Convert to quaternion
-    Eigen::Quaternionf true_orientation = true_pose.getQuaternionOrientation();
-    Eigen::Quaternionf result_orientation = est_pose.getQuaternionOrientation();  
+    Eigen::Quaterniond true_orientation = true_pose.getQuaternionOrientation();
+    Eigen::Quaterniond result_orientation = est_pose.getQuaternionOrientation();
     
     // Calc angle between quaternions in angle-axis representation
-    Eigen::Quaternionf qdiff = true_orientation.inverse() * result_orientation;
+    Eigen::Quaterniond qdiff = true_orientation.inverse() * result_orientation;
     double angle_err = 2*atan2(qdiff.vec().norm(), qdiff.w()) * pfc::rad2deg;
 
     if(print)
@@ -70,3 +70,19 @@ vector<double> scorePoseEstimation(NeedlePose est_pose, NeedlePose true_pose, bo
     return results;
 }
 
+double constrainAngle(double x, bool is_deg) {
+	double min = is_deg ? 180 : M_PI;
+	double max = is_deg ? 360 : 2*M_PI;
+	x = fmod(x + min, max);
+	if (x < 0)
+		x += max;
+	return x - min;
+}
+
+Eigen::Vector3d constrainVector(Eigen::Vector3d v, bool is_deg){
+	return Eigen::Vector3d {
+		constrainAngle(v.x(), is_deg),
+		constrainAngle(v.y(), is_deg),
+		constrainAngle(v.z(), is_deg)
+	};
+}

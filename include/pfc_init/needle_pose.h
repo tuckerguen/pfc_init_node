@@ -16,16 +16,16 @@ using namespace std;
 class NeedlePose {
 private:
     /**
-     *  @brief Euler angle orientation of the needle (degrees)
+     *  @brief Euler angle orientation of the needle (radians)
      */
-    Eigen::Vector3f orientation;
+    Eigen::Vector3d orientation;
 
 public:
     double loc_err{};
     double rot_err{};
 
     bool operator<(const NeedlePose &np) const {
-        return loc_err < np.loc_err;
+        return rot_err < np.rot_err;
     }
 
     /**
@@ -37,12 +37,12 @@ public:
      * @brief Constructor
      * 
      * @param location 3D location (meters)
-     * @param orientation Euler angle orientation (degreees)
+     * @param orientation Euler angle orientation (radians)
      */
-    NeedlePose(const cv::Point3d &location, Eigen::Vector3f orientation);
+    NeedlePose(const cv::Point3d &location, Eigen::Vector3d orientation);
 
-    NeedlePose(const cv::Point3d &location, const Eigen::Quaternionf &q) :
-            location(location) {
+    NeedlePose(const cv::Point3d &location, const Eigen::Quaterniond &q) :
+		location(location) {
         setOrientation(q);
     }
 
@@ -50,38 +50,31 @@ public:
      * @brief Default constructor (location=(0,0,0), orientation=(0,0,0))
      */
     NeedlePose() :
-            location(cv::Point3d(0, 0, 0)), orientation(Eigen::Vector3f(0, 0, 0)) {}
+            location(cv::Point3d(0, 0, 0)), orientation(Eigen::Vector3d(0, 0, 0)) {}
 
     /**
      * @brief Set orientation 
      * 
-     * @param new_orientation New orientation in euler angle representation (degrees
+     * @param new_orientation New orientation in euler angle representation (radians)
      */
-    void setOrientation(Eigen::Vector3f new_orientation) {
-        orientation = std::move(new_orientation);
-    }
+    void setOrientation(Eigen::Vector3d new_orientation);
 
     /**
      * @brief Set orientation 
      * 
      * @param q Orientation in quaternion representation
      */
-    void setOrientation(Eigen::Quaternionf q) {
-        // convert to euler angles
-        orientation = q.toRotationMatrix().eulerAngles(0, 1, 2);
-        // convert from radians to degrees
-        orientation = orientation * pfc::rad2deg;
-    }
+    void setOrientation(Eigen::Quaterniond q);
 
     /**
-     * @brief Returns orientation in euler angle representation (degrees)
+     * @brief Returns orientation in euler angle representation (radians)
      */
-    Eigen::Vector3f getEulerAngleOrientation() { return orientation; };
+    Eigen::Vector3d getEulerAngleOrientation();
 
     /**
      * @brief Returns orientation in quaternion representation
      */
-    Eigen::Quaternionf getQuaternionOrientation();
+    Eigen::Quaterniond getQuaternionOrientation();
 
     /**
      * @brief Prints summary of pose to console
@@ -89,8 +82,6 @@ public:
      * @todo maybe change to toString() and allow user to print it
      */
     void print();
-
-
 };
 
 #endif

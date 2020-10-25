@@ -72,15 +72,15 @@ void PfcInitializer::computeNeedlePose(bool multi_thread)
         // Get 3D location of needle
         cv::Point3d location = deProjectPoints(p_l, p_r, P_l, P_r);
         // Get Euler angle orientation
-        cv::Vec3d left_orientation = match_l->getAngleDegrees();
-        cv::Vec3d right_orientation = match_r->getAngleDegrees();
+        cv::Vec3d left_orientation = match_l->getAngleRadians();
+        cv::Vec3d right_orientation = match_r->getAngleRadians();
 
         // Average out orientation values between left and right calculation
         double avg_yaw = (left_orientation[0] + right_orientation[0]) / 2.0;
         double avg_pitch = (left_orientation[1] + right_orientation[1]) / 2.0;
         double avg_roll = (left_orientation[2] + right_orientation[2]) / 2.0;
         
-        Eigen::Vector3f orientation(avg_roll, avg_pitch, avg_yaw);
+        Eigen::Vector3d orientation(avg_roll, avg_pitch, avg_yaw);
 
         // Store location/orientation
         poses.emplace_back(location, orientation);
@@ -136,7 +136,7 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     results.push_back(to_string(true_pose.location.x));
     results.push_back(to_string(true_pose.location.y));
     results.push_back(to_string(true_pose.location.z));
-    Eigen::Quaternionf tq = true_pose.getQuaternionOrientation();
+    Eigen::Quaterniond tq = true_pose.getQuaternionOrientation();
     results.push_back(to_string(tq.x()));
     results.push_back(to_string(tq.y()));
     results.push_back(to_string(tq.z()));
@@ -162,8 +162,8 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     // Score results
     for(auto & p : poses)
     {
-		Eigen::Vector3f o = p.getEulerAngleOrientation();
-		Eigen::Vector3f t = true_pose.getEulerAngleOrientation();
+		Eigen::Vector3d o = p.getEulerAngleOrientation();
+		Eigen::Vector3d t = true_pose.getEulerAngleOrientation();
 //		printf("%f, %f, %f == %f, %f, %f\n", o.x(), o.y(), o.z(), t.x(), t.y(), t.z());
         NeedlePose* pose = &p;
         vector<double> score = scorePoseEstimation(*pose, true_pose, false);
@@ -190,14 +190,14 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
 
         // //Add orientation guess
         // //Quaternion
-        // Eigen::Quaternionf q = pose.getQuaternionOrientation();
+        // Eigen::Quaterniond q = pose.getQuaternionOrientation();
         // results.push_back(to_string(q.x()));
         // results.push_back(to_string(q.y()));
         // results.push_back(to_string(q.z()));
         // results.push_back(to_string(q.w()));
 
         //Euler Angles orientation guess
-        // Eigen::Vector3f e = pose.getEulerAngleOrientation();
+        // Eigen::Vector3d e = pose.getEulerAngleOrientation();
         // results.at(i).push_back(to_string(e.x()));
         // results.at(i).push_back(to_string(e.y()));
         // results.at(i).push_back(to_string(e.z()));

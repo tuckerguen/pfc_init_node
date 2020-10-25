@@ -6,8 +6,7 @@
 #include "needle_template.h"
 #include "template_match.h"
 #include "matcher.h"
-
-
+#include "pose_helper.h"
 
 template <typename T, typename C>
 vector<T> pq_to_vector(priority_queue<T, vector<T>, C> pq)
@@ -20,14 +19,6 @@ vector<T> pq_to_vector(priority_queue<T, vector<T>, C> pq)
         pq.pop();
     }
     return vec;
-}
-
-
-double constrainAngle(double x){
-    x = fmod(x + 180,360);
-    if (x < 0)
-        x += 360;
-    return x - 180;
 }
 
 // Template match template on base image over range of scales and rotations
@@ -83,9 +74,9 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
                     new_match.z = z;
                     // TODO: Check neg/pos direction for pitch/roll 
                     // new_match.yaw = y > 180 ? (y - 360) : y;
-                    new_match.yaw = constrainAngle(y);
-                    new_match.pitch = constrainAngle(p);
-                    new_match.roll = constrainAngle(r);
+                    new_match.yaw = constrainAngle(y, false);
+                    new_match.pitch = constrainAngle(p, false);
+                    new_match.roll = constrainAngle(r, false);
                     // Offset the origin to sit in the correct location of the final image
                     new_match.origin = templ.origin + cv::Point2d(new_match.rect.x, new_match.rect.y);
 

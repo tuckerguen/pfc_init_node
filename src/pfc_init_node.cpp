@@ -123,21 +123,29 @@ vector<geometry_msgs::Pose> generate_poses(int num_poses, pose_bounds pb, vector
 		test_pose.position.y = rng(pb.ymin, pb.ymax);
 		test_pose.position.z = rng(pb.zmin, pb.zmax);
 
-//		//http://planning.cs.uiuc.edu/node198.html
-//		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
-//		test_pose.orientation.y = sqrt(1 - u)*cos(2*M_PI*v);
-//		test_pose.orientation.z = sqrt(u)*sin(2*M_PI*w);
-//		test_pose.orientation.w = sqrt(u)*cos(2*M_PI*w);
-//		test_pose.orientation.x = sqrt(1 - u)*sin(2*M_PI*v);
+	//		//http://planning.cs.uiuc.edu/node198.html
+	//		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
+	//		test_pose.orientation.y = sqrt(1 - u)*cos(2*M_PI*v);
+	//		test_pose.orientation.z = sqrt(u)*sin(2*M_PI*w);
+	//		test_pose.orientation.w = sqrt(u)*cos(2*M_PI*w);
+	//		test_pose.orientation.x = sqrt(1 - u)*sin(2*M_PI*v);
 
-		 Eigen::Quaternionf q;
-		 q = Eigen::AngleAxisf(rng(0, 2 * M_PI) * axes.at(0), Eigen::Vector3f::UnitX()) //roll
-		 	* Eigen::AngleAxisf(rng(0, 2 * M_PI) * axes.at(1), Eigen::Vector3f::UnitY()) //pitch
-		 	* Eigen::AngleAxisf(rng(0, 2 * M_PI) * axes.at(2), Eigen::Vector3f::UnitZ()); //yaw
-		 test_pose.orientation.x = q.x();
-		 test_pose.orientation.y = q.y();
-		 test_pose.orientation.z = q.z();
-		 test_pose.orientation.w = q.w();
+		// Generate random rpy values from -pi/2 to pi/2
+		Eigen::Quaterniond q;
+		double roll = rng(-M_PI, M_PI) * axes.at(0);
+		double pitch = rng(-M_PI, M_PI) * axes.at(1);
+		double yaw = rng(-M_PI, M_PI) * axes.at(2);
+		Eigen::Vector3d rpy(roll, pitch, yaw);
+		rpy.normalize();
+
+		// Convert to quaternion
+		q = Eigen::AngleAxisd(rpy.x(), Eigen::Vector3d::UnitX()) //roll
+		  * Eigen::AngleAxisd(rpy.y(), Eigen::Vector3d::UnitY()) //pitch
+		  * Eigen::AngleAxisd(rpy.z(), Eigen::Vector3d::UnitZ()); //yaw
+		test_pose.orientation.x = q.x();
+		test_pose.orientation.y = q.y();
+		test_pose.orientation.z = q.z();
+		test_pose.orientation.w = q.w();
 
 		poses.push_back(test_pose);
 	}
@@ -169,6 +177,18 @@ geometry_msgs::Pose get_sim_needle_pose(ros::NodeHandle* nh){
 	}
 }
 
+void params_to_radians(pfc::match_params* params){
+	params->roll_inc *= pfc::deg2rad;
+	params->max_roll *= pfc::deg2rad;
+	params->min_roll *= pfc::deg2rad;
+	params->pitch_inc *= pfc::deg2rad;
+	params->max_pitch *= pfc::deg2rad;
+	params->min_pitch *= pfc::deg2rad;
+	params->yaw_inc *= pfc::deg2rad;
+	params->max_yaw *= pfc::deg2rad;
+	params->min_yaw *= pfc::deg2rad;
+}
+
 vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geometry_msgs::Pose> poses, ros::NodeHandle* nh,
 									cv::Mat P_l, cv::Mat P_r, vector<vector<string>> all_results,
 									bool test_candpts, bool display_imgs){
@@ -186,12 +206,14 @@ vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geom
 			set_sim_needle_pose(poses.at(i), nh);
 			geometry_msgs::Pose needle_pose = get_sim_needle_pose(nh);
 
+
 			// Convert geometry_msgs::Pose to NeedlePose
-			Eigen::Quaternionf
+			Eigen::Quaterniond
 				q(needle_pose.orientation.w,
 				  needle_pose.orientation.x,
 				  needle_pose.orientation.y,
 				  needle_pose.orientation.z);
+
 			cv::Point3d loc(needle_pose.position.x, needle_pose.position.y, needle_pose.position.z);
 			NeedlePose true_pose(loc, q);
 
@@ -208,7 +230,6 @@ vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geom
 				 cv::waitKey(0);
 			}
 
-
 			/* Configure Match Parameters */
 			pfc::match_params params = {
 				0, 1, 30, //yaw
@@ -220,10 +241,11 @@ vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geom
 				P_l,
 				P_r
 			};
+			params_to_radians(&params);
 
 			/** Create and run initializer */
 			PfcInitializer pfc_init(P_l, P_r, l_img, r_img, params);
-			pfc_init.run(false, true, true_pose);
+			pfc_init.run(true, true, true_pose);
 
 			// Write test data to csv file
 			vector<string> results = pfc_init.getResultsAsVector(true_pose);
@@ -277,7 +299,7 @@ int main(int argc, char **argv) {
 	/* Generate set of random poses */
 	int num_poses = 50;
 	// roll, pitch, yaw
-	vector<bool> axes{false, false, true};
+	vector<bool> axes{false, true, false};
 	vector<geometry_msgs::Pose> poses = generate_poses(num_poses, pb, axes);
 
 	vector<vector<string>> all_results = run_on_poses(max_cand_pts, num_poses, poses, &nh, P_l, P_r, csv_base, false, false);

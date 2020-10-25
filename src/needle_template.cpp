@@ -5,18 +5,13 @@
 
 using namespace std;
 
-void NeedleTemplate::GenerateTemplate(double z, double y, double p, double r)
+void NeedleTemplate::GenerateTemplate(double z, double r, double p, double y)
 {
     // Array of needle points
     cv::Point2d needle_arc[resolution + 1];
 
     // Projection Matrix
     cv::Mat projection = left ? params.P_l : params.P_r;
-
-    // Convert to radians
-    y = y * pfc::deg2rad;
-    p = p * pfc::deg2rad;
-    r = r * pfc::deg2rad;
 
     // Transformation Matrix
     // Formula for general rotation matrix from: https://en.wikipedia.org/wiki/Rotation_matrix#General_rotations
@@ -68,7 +63,6 @@ void NeedleTemplate::GenerateTemplate(double z, double y, double p, double r)
 
         cv::line(templ, p1, p2, cv::Scalar(255), 2, 8, 0);
     }
-
 
     // Crop image to only include the needle
     upmost = floor(upmost); leftmost = floor(leftmost); 

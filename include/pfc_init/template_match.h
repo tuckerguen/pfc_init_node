@@ -74,12 +74,12 @@ public:
     /**
      * @brief Returns the match angle in degrees
      */
-    cv::Vec3d getAngleDegrees() { return cv::Vec3d(yaw, pitch, roll); }
+    cv::Vec3d getAngleDegrees() { return cv::Vec3d(yaw, pitch, roll) * pfc::rad2deg; }
     
     /**
      * @brief Returns the match angle in radians
      */
-    cv::Vec3d getAngleRadians() { return cv::Vec3d(yaw, pitch, roll) * pfc::deg2rad; }
+    cv::Vec3d getAngleRadians() { return cv::Vec3d(yaw, pitch, roll); }
 
     /**
      * @brief Format and print details of the match
