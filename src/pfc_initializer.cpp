@@ -4,6 +4,7 @@
 #include <opencv2/core.hpp>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Core>
+#include <opencv2/calib3d.hpp>
 #include "pose_helper.h"
 #include "matcher.h"
 #include "pfc_initializer.h"
@@ -70,20 +71,33 @@ void PfcInitializer::computeNeedlePose(bool multi_thread)
         p_r.at<double>(1) = match_r->origin.y;
         
         // Get 3D location of needle
-        cv::Point3d location = deProjectPoints(p_l, p_r, P_l, P_r);
+		// cv::Point3d location = deProjectPoints(p_l, p_r, P_l, P_r);
+
+		// Test with PnP
+		for(cv::Point2d& pt : match_l->templ.img_pts){
+			pt.x += match_l->origin.x;
+			pt.y += match_l->origin.y;
+		}
+
+		cv::Mat rvec, tvec;
+		cv::Mat cam_matrix = P_l(cv::Range(0,3), cv::Range(0,3));
+		cv::Mat distcoeff;
+		cv::solvePnPRansac(match_l->templ.obj_pts, match_l->templ.img_pts, cam_matrix , distcoeff, rvec, tvec);
+		// End test
+
         // Get Euler angle orientation
         cv::Vec3d left_orientation = match_l->getAngleRadians();
         cv::Vec3d right_orientation = match_r->getAngleRadians();
 
         // Average out orientation values between left and right calculation
-        double avg_yaw = (left_orientation[0] + right_orientation[0]) / 2.0;
+        double avg_yaw   = (left_orientation[0] + right_orientation[0]) / 2.0;
         double avg_pitch = (left_orientation[1] + right_orientation[1]) / 2.0;
-        double avg_roll = (left_orientation[2] + right_orientation[2]) / 2.0;
+        double avg_roll  = (left_orientation[2] + right_orientation[2]) / 2.0;
         
         Eigen::Vector3d orientation(avg_roll, avg_pitch, avg_yaw);
 
         // Store location/orientation
-        poses.emplace_back(location, orientation);
+//        poses.emplace_back(location, orientation);
     }
 }
 
@@ -96,20 +110,10 @@ void PfcInitializer::displayResults(const NeedlePose& true_pose)
         TemplateMatch match_r = r_matches.at(i);
         int color_inc = 255/l_matches.size();
 
-//        cv::namedWindow("l", CV_WINDOW_AUTOSIZE);
-//        cv::namedWindow("r", CV_WINDOW_AUTOSIZE);
-//        imshow("l" + to_string(i), match_l.templ);
-//        imshow("r" + to_string(i),match_r.templ);
-
-//        printf("%f, %f == %f\n", match_l.pitch, match_r.pitch, true_pose.getEulerAngleOrientation().y());
-
-//        cv::waitKey(0);
-        // match_l.templ.copyTo(l_img.raw.rowRange(match_l.rect.x,match_l.rect.x+match_l.rect.width), l_img.raw.colRange(match_l.rect.y, match_l.rect.y+match_l.rect.height));
-        // match_r.templ.copyTo(r_img.raw.rowRange(match_r.rect.x,match_r.rect.x+match_r.rect.width), r_img.raw.colRange(match_r.rect.y, match_r.rect.y+match_r.rect.height));
-        match_l.drawOnImage(l_img.raw, cv::Scalar(i*color_inc, 255-i*color_inc, 180));
-        match_r.drawOnImage(r_img.raw, cv::Scalar(i*color_inc, 255-i*color_inc, 180));
-        drawNeedleOrigin(l_img.raw, match_l.origin, cv::Scalar(0,255,255)); 
-        drawNeedleOrigin(r_img.raw, match_r.origin, cv::Scalar(0,255,255)); 
+        match_l.drawOnImage(l_img.image, cv::Scalar(i*color_inc, 255-i*color_inc, 180));
+        match_r.drawOnImage(r_img.image, cv::Scalar(i*color_inc, 255-i*color_inc, 180));
+        drawNeedleOrigin(l_img.image, match_l.origin, cv::Scalar(0,255,255));
+        drawNeedleOrigin(r_img.image, match_r.origin, cv::Scalar(0,255,255));
     }
 
     for(int i = 0; i < poses.size(); i++)
@@ -119,11 +123,12 @@ void PfcInitializer::displayResults(const NeedlePose& true_pose)
         scorePoseEstimation(poses.at(i), true_pose, true);      
         cout << "----------------------------------------------------------------------" << endl;
     }
-
+	cv::namedWindow("templ", cv::WINDOW_AUTOSIZE);
+    cv::imshow("templ", l_matches.at(0).templ.image);
     cv::namedWindow("left", cv::WINDOW_AUTOSIZE);
     cv::namedWindow("right", cv::WINDOW_AUTOSIZE);
-    cv::imshow("left", l_img.raw);
-    cv::imshow("right", r_img.raw);
+    cv::imshow("left", l_img.image);
+    cv::imshow("right", r_img.image);
     cv::waitKey(0);
 
     cv::destroyAllWindows();
@@ -164,17 +169,17 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
     {
 		Eigen::Vector3d o = p.getEulerAngleOrientation();
 		Eigen::Vector3d t = true_pose.getEulerAngleOrientation();
-//		printf("%f, %f, %f == %f, %f, %f\n", o.x(), o.y(), o.z(), t.x(), t.y(), t.z());
+
         NeedlePose* pose = &p;
         vector<double> score = scorePoseEstimation(*pose, true_pose, false);
         pose->loc_err = score.at(0);
         pose->rot_err = score.at(1);
     }
 
-    // Sort results
-    std::sort(poses.begin(), poses.end());
+	// Sort results
+	std::sort(poses.begin(), poses.end());
 
-    for(const auto& pose : poses)
+	for(const auto& pose : poses)
     {
         // Add time
         results.push_back(to_string(time));
@@ -182,7 +187,8 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose)
         results.push_back(to_string(pose.loc_err));
         results.push_back(to_string(pose.rot_err)); 
 
-        // cout << pose.loc_err << ", " << pose.rot_err << endl;
+		// Use if need more than errors
+		// Must update format of the csv in pfc_init_node.cpp
         //Add location guess
         // results.push_back(to_string(pose.location.x));
         // results.push_back(to_string(pose.location.y));

@@ -2,6 +2,7 @@
 #define TEMPLATE_MATCH_H
 
 #include <opencv2/imgproc.hpp>
+#include "needle_template.h"
 #include "pfc_initializer_constants.h"
 
 //A template match
@@ -36,7 +37,7 @@ public:
     /**
      * @brief Template used for match
      */
-    cv::Mat templ;
+    NeedleTemplate templ;
 
     double ox,oy;
     cv::Point2d origin;
@@ -46,9 +47,9 @@ public:
      * 
      * @param score Match quality value given to match by cv::matchTemplate()
      */
-    TemplateMatch(double z, double yaw, double pitch, double roll, double score) : 
-        z(z), yaw(yaw), pitch(pitch), roll(roll), score(score), rect(0,0,0,0), result(), templ() 
-    {} 
+    TemplateMatch(double z, double yaw, double pitch, double roll, double score):
+        z(z), yaw(yaw), pitch(pitch), roll(roll), score(score), rect(0,0,0,0), result()
+    {}
 
     /**
      * @brief Constructor
@@ -59,15 +60,15 @@ public:
      * @param templ  Template used in match
      */
     TemplateMatch(double score, cv::Rect2i rect, cv::Mat result, cv::Mat templ) : 
-        score(score), rect(rect), result(result), templ(templ) 
-    {} 
+        score(score), rect(rect), result(result)
+    {}
 
     /**
      * @brief Default constructor (angle=0, score=-DBL_MAX, scale=1, rect=(0,0,0,0))
      */
     TemplateMatch() : 
-        score(-DBL_MAX), z(0.15), rect(0,0,0,0), result() 
-    {} 
+        score(-DBL_MAX), z(0.15), rect(0,0,0,0), result()
+    {}
 
     // TemplateMatch(TemplateMatch &&) = default;
 

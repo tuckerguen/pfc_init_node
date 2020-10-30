@@ -41,7 +41,12 @@ void NeedleTemplate::GenerateTemplate(double z, double r, double p, double y)
             1.0
         );
 
+        cv::Point3d pt3d(needle_arc_pt(cv::Range(0,3), cv::Range(0,1)));
+		obj_pts.push_back(pt3d);
+
         needle_arc[i] = CalcUVPoint(needle_arc_pt, transform, projection);
+
+		img_pts.push_back(needle_arc[i]);
 
         // Track the needle boundaries
         if(needle_arc[i].x < leftmost)
@@ -61,7 +66,7 @@ void NeedleTemplate::GenerateTemplate(double z, double r, double p, double y)
         cv::Point2d p1 = needle_arc[i-1];
         cv::Point2d p2 = needle_arc[i];
 
-        cv::line(templ, p1, p2, cv::Scalar(255), 2, 8, 0);
+        cv::line(templ, p1, p2, cv::Scalar(255), 2 * z * 11, 8, 0);
     }
 
     // Crop image to only include the needle

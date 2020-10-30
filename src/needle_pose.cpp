@@ -8,7 +8,7 @@
 using namespace std;
 
 void NeedlePose::setOrientation(Eigen::Vector3d new_orientation) {
-	orientation = constrainVector(new_orientation, false);
+	orientation = constrainVector(std::move(new_orientation), false);
 }
 
 void NeedlePose::setOrientation(Eigen::Quaterniond q) {

@@ -121,7 +121,8 @@ vector<geometry_msgs::Pose> generate_poses(int num_poses, pose_bounds pb, vector
 		geometry_msgs::Pose test_pose;
 		test_pose.position.x = rng(pb.xmin, pb.xmax);
 		test_pose.position.y = rng(pb.ymin, pb.ymax);
-		test_pose.position.z = rng(pb.zmin, pb.zmax);
+//		test_pose.position.z = rng(pb.zmin, pb.zmax);
+		test_pose.position.z = 0.12;
 
 	//		//http://planning.cs.uiuc.edu/node198.html
 	//		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
@@ -232,10 +233,10 @@ vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geom
 
 			/* Configure Match Parameters */
 			pfc::match_params params = {
-				0, 1, 30, //yaw
-				0, 360, 30, //pitch
-				0, 1, 30, //roll
-				0.07, 0.18, 0.01, //z
+				0, 360, 10, //yaw
+				0, 180, 10, //pitch
+				0, 180, 10, //roll
+				0.12, 0.121, 0.01, //z
 				cand_pts, // # candidate points to return
 				10, // # points in needle line
 				P_l,
@@ -280,7 +281,6 @@ int main(int argc, char **argv) {
 	);
 	cv::Mat P_l = cv::Mat(3, 4, CV_64FC1, (void *)l_inf.P.data());
 	cv::Mat P_r = cv::Mat(3, 4, CV_64FC1, (void *)r_inf.P.data());
-
 
 	/** Pose Generation Configurations */
 	/* Needle position boundaries */

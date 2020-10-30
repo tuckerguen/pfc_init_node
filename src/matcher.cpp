@@ -70,6 +70,8 @@ vector<TemplateMatch> match(const cv::Mat& img, NeedleTemplate templ)
                     templ.GenerateTemplate(z, y, p, r);
                     //Match rotated template to image
                     TemplateMatch new_match = getMatch(img, templ.image);
+                    new_match.templ = templ;
+
                     // Store other match details
                     new_match.z = z;
                     // TODO: Check neg/pos direction for pitch/roll 

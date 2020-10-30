@@ -6,7 +6,6 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <utility>
-#include "template_match.h"
 #include "pfc_initializer_constants.h"
 #include "needle_image.h"
 
@@ -33,8 +32,10 @@ public:
      */
     pfc::match_params params;
 
-    int resolution;
+    std::vector<cv::Point3d> obj_pts;
+    std::vector<cv::Point2d> img_pts;
 
+    int resolution;
     bool left;
 
 
@@ -55,6 +56,8 @@ public:
     {
         GenerateTemplate(params.min_z, params.min_yaw, params.min_pitch, params.min_roll);
     }
+
+    NeedleTemplate(){};
 
     /**
      * @brief Deconstructor
