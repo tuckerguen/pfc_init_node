@@ -18,7 +18,7 @@
 9. Once the program is done running you'll see an output of the results in the terminal and a new csv file containing 
 the results will appear in the test_results directory, with the name being the time that the program was run.
 
-# Current (as of 10/16/20) Performance Metrics
+# Current (as of 11/06/20) Performance Metrics
 ## General Performance
 Run with parameters:
 
@@ -30,23 +30,33 @@ Run with parameters:
 | Rotation increment (all axes)	                            | 30	    |
 | # pts in needle template                                 	| 10       	|
 | Number of random poses                           	        | 50      	|
-| Candidate choice for each pose                            | Min error for metric |
+| Candidate choice for each pose                            | Min error for metric (location, orientation, time)|
 
 These parameters for these were picked based on the [Incrementing Metrics](#incrementing-metrics) data, choosing the values
 that maximized performance while minimizing runtime.  
   
-For each individual axis rotation, there is no rotation in the other 2 axes.
 ### Results
+***Test 1***  
 
-| Axis                                                	| Location Error (mm) | Rotation Error (deg) | Execution Time (s)
-|-------------------------------------------------------|----------      |-----                  |----
-| Yaw                                                   | 1.6711       |   4.6892    |  0.3936            
-| Pitch                                                 | 4.1667       |   12.2309   |       
-| Roll                                                  | 2.9620       |   5.2490    |       
-| All                                                   | 33.1951      |   64.6575   | 54.1069s
+| Metric                                                	| Mean | Standard Deviation 
+|-------------------------------------------------------|----------      |-----         
+| Location Error (mm)                                       | 3.0916      |   1.2136             
+| Rotation Error (deg)                                      | 29.2060       |   15.0941   |  
+| Time (s)                                                  | 20.0986       |   0.4719    |                                                         | 33.1951      |   64.6575   | 54.1069s
+
+***Test 2***  
+
+| Metric                                                	| Mean | Standard Deviation 
+|-------------------------------------------------------|----------      |-----         
+| Location Error (mm)                                       | 3.8173      |   1.9341              
+| Rotation Error (deg)                                      | 40.0688       |  16.8813   |  
+| Time (s)                                                  | 20.2947       |   0.5998    |                                                         | 33.1951      |   64.6575   | 54.1069s
 
 
 ## Determining Increment Values and Candidate Point Number
+*Note that the following tests are up to date only to 10/16/20. However, the changes between 10/16/20 and 11/6/20 are  
+not huge, and I believe the trends seen below still reflect the trends of the current version*  
+### Configuration 
 There are four parameters that have the greatest effect on performance when running the particle filter auto-initialization:  
 * Yaw, Pitch, and Roll increments  (from min to max value, how much to increment for each template matching iteration)  
 * Number of candidate points to return (Top n candidate points based on template matching score)  

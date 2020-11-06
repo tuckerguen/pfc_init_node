@@ -28,7 +28,7 @@ struct pose_bounds {
   float zmax;
 };
 
-void writeDataListToCSV(vector<vector<string>> dataList, const string& time_str) {
+void writeDataListToCSV(vector<vector<string>> dataList, const string &time_str) {
 	ofstream data_file;
 
 	std::string path = ros::package::getPath("pfc_init");
@@ -77,7 +77,7 @@ float rng(float min, float max) {
 	return dist(gen);
 }
 
-vector<vector<string>> create_csv_vec(int num_cand_pts){
+vector<vector<string>> create_csv_vec(int num_cand_pts) {
 	vector<string> csv_key_base
 		{
 			"time", "loc_err", "rot_err"
@@ -99,7 +99,7 @@ vector<vector<string>> create_csv_vec(int num_cand_pts){
 	return all_results;
 }
 
-string get_time_str(){
+string get_time_str() {
 	/* Get current time as string for naming test file */
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -115,7 +115,7 @@ string get_time_str(){
  * @param axes vector of logical values for which axes to generate rotations on <roll, pitch, yaw>
  * @return list of geometry_msgs::Pose
  */
-vector<geometry_msgs::Pose> generate_poses(int num_poses, pose_bounds pb, vector<bool> axes){
+vector<geometry_msgs::Pose> generate_poses(int num_poses, pose_bounds pb, vector<bool> axes) {
 	vector<geometry_msgs::Pose> poses;
 	for (int i = 0; i < num_poses; i++) {
 		geometry_msgs::Pose test_pose;
@@ -124,25 +124,25 @@ vector<geometry_msgs::Pose> generate_poses(int num_poses, pose_bounds pb, vector
 //		test_pose.position.z = rng(pb.zmin, pb.zmax);
 		test_pose.position.z = 0.12;
 
-	//		//http://planning.cs.uiuc.edu/node198.html
-	//		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
-	//		test_pose.orientation.y = sqrt(1 - u)*cos(2*M_PI*v);
-	//		test_pose.orientation.z = sqrt(u)*sin(2*M_PI*w);
-	//		test_pose.orientation.w = sqrt(u)*cos(2*M_PI*w);
-	//		test_pose.orientation.x = sqrt(1 - u)*sin(2*M_PI*v);
+		//		//http://planning.cs.uiuc.edu/node198.html
+		//		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
+		//		test_pose.orientation.y = sqrt(1 - u)*cos(2*M_PI*v);
+		//		test_pose.orientation.z = sqrt(u)*sin(2*M_PI*w);
+		//		test_pose.orientation.w = sqrt(u)*cos(2*M_PI*w);
+		//		test_pose.orientation.x = sqrt(1 - u)*sin(2*M_PI*v);
 
 		// Generate random rpy values from -pi/2 to pi/2
 		Eigen::Quaterniond q;
-		double roll = rng(-M_PI, M_PI) * axes.at(0);
-		double pitch = rng(-M_PI, M_PI) * axes.at(1);
-		double yaw = rng(-M_PI, M_PI) * axes.at(2);
+		double roll = rng(-M_PI, M_PI)*axes.at(0);
+		double pitch = rng(-M_PI, M_PI)*axes.at(1);
+		double yaw = rng(-M_PI, M_PI)*axes.at(2);
 		Eigen::Vector3d rpy(roll, pitch, yaw);
 		rpy.normalize();
 
 		// Convert to quaternion
 		q = Eigen::AngleAxisd(rpy.x(), Eigen::Vector3d::UnitX()) //roll
-		  * Eigen::AngleAxisd(rpy.y(), Eigen::Vector3d::UnitY()) //pitch
-		  * Eigen::AngleAxisd(rpy.z(), Eigen::Vector3d::UnitZ()); //yaw
+			*Eigen::AngleAxisd(rpy.y(), Eigen::Vector3d::UnitY()) //pitch
+			*Eigen::AngleAxisd(rpy.z(), Eigen::Vector3d::UnitZ()); //yaw
 		test_pose.orientation.x = q.x();
 		test_pose.orientation.y = q.y();
 		test_pose.orientation.z = q.z();
@@ -153,7 +153,7 @@ vector<geometry_msgs::Pose> generate_poses(int num_poses, pose_bounds pb, vector
 	return poses;
 }
 
-void set_sim_needle_pose(geometry_msgs::Pose pose, ros::NodeHandle* nh){
+void set_sim_needle_pose(geometry_msgs::Pose pose, ros::NodeHandle *nh) {
 	// Update needle pose in Gazebo sim
 	gazebo_msgs::ModelState modelstate;
 	modelstate.model_name = (string)"needle";
@@ -165,20 +165,20 @@ void set_sim_needle_pose(geometry_msgs::Pose pose, ros::NodeHandle* nh){
 	client.call(setmodelstate);
 }
 
-geometry_msgs::Pose get_sim_needle_pose(ros::NodeHandle* nh){
+geometry_msgs::Pose get_sim_needle_pose(ros::NodeHandle *nh) {
 	// Get Simulation Needle Pose
 	gazebo_msgs::ModelStates model_states = *(
 		ros::topic::waitForMessage<gazebo_msgs::ModelStates>("/gazebo/model_states", *nh)
 	);
 
-	for(int n =  0; n < model_states.name.size(); n++){
-		if (model_states.name[n] == "needle"){
+	for (int n = 0; n < model_states.name.size(); n++) {
+		if (model_states.name[n]=="needle") {
 			return model_states.pose[n];
 		}
 	}
 }
 
-void params_to_radians(pfc::match_params* params){
+void params_to_radians(pfc::match_params *params) {
 	params->roll_inc *= pfc::deg2rad;
 	params->max_roll *= pfc::deg2rad;
 	params->min_roll *= pfc::deg2rad;
@@ -190,16 +190,21 @@ void params_to_radians(pfc::match_params* params){
 	params->min_yaw *= pfc::deg2rad;
 }
 
-vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geometry_msgs::Pose> poses, ros::NodeHandle* nh,
-									cv::Mat P_l, cv::Mat P_r, vector<vector<string>> all_results,
-									bool test_candpts, bool display_imgs){
-	 // Loop over all options of some variable we want to test performance of
-	 // If not testing variable candidate point numbers
-	 int start_candpts = 30;
-	 max_cand_pts = test_candpts ? max_cand_pts : start_candpts;
-	 for(int cand_pts = start_candpts; cand_pts <= max_cand_pts; cand_pts += 5)
-	 {
-	 	cout << cand_pts << endl;
+vector<vector<string>> run_on_poses(int max_cand_pts,
+									int num_poses,
+									vector<geometry_msgs::Pose> poses,
+									ros::NodeHandle *nh,
+									cv::Mat P_l,
+									cv::Mat P_r,
+									vector<vector<string>> all_results,
+									bool test_candpts,
+									bool display_imgs) {
+	// Loop over all options of some variable we want to test performance of
+	// If not testing variable candidate point numbers
+	int start_candpts = 100;
+	max_cand_pts = test_candpts ? max_cand_pts : start_candpts;
+	for (int cand_pts = start_candpts; cand_pts <= max_cand_pts; cand_pts += 5) {
+		cout << cand_pts << endl;
 
 		// Run initialization on all poses
 		for (int i = 0; i < num_poses; i++) {
@@ -220,23 +225,23 @@ vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geom
 
 			ros::spinOnce();
 
-			if(display_imgs) {
+			if (display_imgs) {
 				// Display retrieved images
-				 cv::namedWindow("l");
-				 cv::imshow("l", l_img);
-				 cv::waitKey(0);
+				cv::namedWindow("l");
+				cv::imshow("l", l_img);
+				cv::waitKey(0);
 
-				 cv::namedWindow("r");
-				 cv::imshow("r", r_img);
-				 cv::waitKey(0);
+				cv::namedWindow("r");
+				cv::imshow("r", r_img);
+				cv::waitKey(0);
 			}
 
 			/* Configure Match Parameters */
 			pfc::match_params params = {
-				0, 360, 10, //yaw
-				0, 180, 10, //pitch
-				0, 180, 10, //roll
-				0.12, 0.121, 0.01, //z
+				0, 360, 30, //yaw
+				0, 360, 30, //pitch
+				0, 360, 30, //roll
+				0.07, 0.18, 0.01, //z
 				cand_pts, // # candidate points to return
 				10, // # points in needle line
 				P_l,
@@ -246,19 +251,19 @@ vector<vector<string>> run_on_poses(int max_cand_pts, int num_poses, vector<geom
 
 			/** Create and run initializer */
 			PfcInitializer pfc_init(P_l, P_r, l_img, r_img, params);
-			pfc_init.run(true, true, true_pose);
+			pfc_init.run(false, true, true_pose);
 
 			// Write test data to csv file
 			vector<string> results = pfc_init.getResultsAsVector(true_pose);
 
 			// Add arbitrary large number for all the remaining candidate points not collected for this run
-			int diff = 3 * (max_cand_pts - cand_pts);
+			int diff = 3*(max_cand_pts - cand_pts);
 			vector<string> addtl(diff, "100000");
 			results.insert(results.end(), addtl.begin(), addtl.end());
 			all_results.push_back(results);
 		}
-	 }
-	 return all_results;
+	}
+	return all_results;
 }
 
 int main(int argc, char **argv) {
@@ -285,12 +290,12 @@ int main(int argc, char **argv) {
 	/** Pose Generation Configurations */
 	/* Needle position boundaries */
 	pose_bounds pb = {
-		 -0.045,  0.045, //x bounds
-		 -0.035,  0.02, // y bounds
-		 0.07, 0.13 // z bounds
+		-0.045, 0.045, //x bounds
+		-0.035, 0.02, // y bounds
+		0.07, 0.13 // z bounds
 	};
 
-	int max_cand_pts = 30; // TODO: Move to input parameter
+	int max_cand_pts = 40; // TODO: Move to input parameter
 
 	/* Configure csv key (first row in the csv) */
 	vector<vector<string>> csv_base = create_csv_vec(max_cand_pts);
@@ -299,9 +304,10 @@ int main(int argc, char **argv) {
 	/* Generate set of random poses */
 	int num_poses = 50;
 	// roll, pitch, yaw
-	vector<bool> axes{false, true, false};
+	vector<bool> axes{true, true, true};
 	vector<geometry_msgs::Pose> poses = generate_poses(num_poses, pb, axes);
 
+	// Run and collect data
 	vector<vector<string>> all_results = run_on_poses(max_cand_pts, num_poses, poses, &nh, P_l, P_r, csv_base, false, false);
 
 	writeDataListToCSV(all_results, time);
