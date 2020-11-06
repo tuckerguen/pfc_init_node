@@ -295,14 +295,14 @@ int main(int argc, char **argv) {
 		0.07, 0.13 // z bounds
 	};
 
-	int max_cand_pts = 40; // TODO: Move to input parameter
+	int max_cand_pts = 50; // TODO: Move to input parameter
 
 	/* Configure csv key (first row in the csv) */
 	vector<vector<string>> csv_base = create_csv_vec(max_cand_pts);
 	string time = get_time_str();
 
 	/* Generate set of random poses */
-	int num_poses = 50;
+	int num_poses = 200;
 	// roll, pitch, yaw
 	vector<bool> axes{true, true, true};
 	vector<geometry_msgs::Pose> poses = generate_poses(num_poses, pb, axes);

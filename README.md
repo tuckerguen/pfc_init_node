@@ -29,29 +29,36 @@ Run with parameters:
 | Rotation range (all axes)                                 | 0-360 	| 
 | Rotation increment (all axes)	                            | 30	    |
 | # pts in needle template                                 	| 10       	|
-| Number of random poses                           	        | 50      	|
 | Candidate choice for each pose                            | Min error for metric (location, orientation, time)|
+| Multi-threading?                                        | Yes (12 threads)
 
 These parameters for these were picked based on the [Incrementing Metrics](#incrementing-metrics) data, choosing the values
 that maximized performance while minimizing runtime.  
   
 ### Results
-***Test 1***  
+***Test 1 - 40 candidate points, 50 poses***  
 
 | Metric                                                	| Mean | Standard Deviation 
 |-------------------------------------------------------|----------      |-----         
 | Location Error (mm)                                       | 3.0916      |   1.2136             
 | Rotation Error (deg)                                      | 29.2060       |   15.0941   |  
-| Time (s)                                                  | 20.0986       |   0.4719    |                                                         | 33.1951      |   64.6575   | 54.1069s
+| Time (s)                                                  | 20.0986       |   0.4719    |                                                         
 
-***Test 2***  
+***Test 2 - 40 candidate points, 50 poses***    
 
 | Metric                                                	| Mean | Standard Deviation 
 |-------------------------------------------------------|----------      |-----         
 | Location Error (mm)                                       | 3.8173      |   1.9341              
 | Rotation Error (deg)                                      | 40.0688       |  16.8813   |  
-| Time (s)                                                  | 20.2947       |   0.5998    |                                                         | 33.1951      |   64.6575   | 54.1069s
+| Time (s)                                                  | 20.2947       |   0.5998    |                                                        
 
+***Test 3 - 100 candidate points, 200 poses***  
+
+| Metric                                                	| Mean | Standard Deviation 
+|-------------------------------------------------------|----------      |-----         
+| Location Error (mm)                                       | 2.2801     |   1.0947              
+| Rotation Error (deg)                                      | 29.1297      |  9.7233   |  
+| Time (s)                                                  | 19.4277      |   0.3510   |   
 
 ## Determining Increment Values and Candidate Point Number
 *Note that the following tests are up to date only to 10/16/20. However, the changes between 10/16/20 and 11/6/20 are  
