@@ -60,7 +60,24 @@ that maximized performance while minimizing runtime.
 | Rotation Error (deg)                                      | 29.1297      |  9.7233   |  
 | Time (s)                                                  | 19.4277      |   0.3510   |   
 
-## Determining Increment Values and Candidate Point Number
+## Candidate Point Count vs Performance
+Although there is minimal overhead to collecting more candidate points, it's still useful to test to see the degree to 
+which there are diminishing returns for adding more candidate points to educate the pick for that parameter.   
+
+Using data from Test 3 above, average rotation and location errors over all 200 poses for a range 
+of candidate points quantities from 1 to 100 were sampled. Although the Test 3 data was collected for 100 candidate points,
+the subset of candidate points at each candidate point quantity from 1-100 is identical to the set of candidate points 
+that the program would return if the data was collected with a maximum number of candidate points equal to that
+candidate point quantity.  
+
+Below are graphs of location and rotation error versus the number of candidate points sampled.
+ 
+![Number of Candidate Points vs Location Error](imgs/locerr_vs_candpts.jpg)    
+
+![Number of Candidate Points vs Rotation Error](imgs/roterr_vs_candpts.jpg)  
+
+
+## Determining Increment Values
 *Note that the following tests are up to date only to 10/16/20. However, the changes between 10/16/20 and 11/6/20 are  
 not huge, and I believe the trends seen below still reflect the trends of the current version*  
 ### Configuration 
@@ -84,16 +101,15 @@ The following tests were conducted with fixed parameters of:
 
 ### Yaw Increment
 ![Yaw increment vs Location error](imgs/yaw_inc_vs_loc_err1.jpeg)  
+
 ![Yaw increment vs Location error](imgs/yaw_inc_vs_rot_err1.jpeg)  
 
 ### Pitch Increment
 ![pitch increment vs Location error](imgs/pitch_inc_vs_loc_err1.jpeg)  
+
 ![pitch increment vs Location error](imgs/pitch_inc_vs_rot_err1.jpeg)  
 
 ### Roll Increment
 ![roll increment vs Location error](imgs/roll_inc_vs_loc_err1.jpeg)  
-![roll increment vs Location error](imgs/roll_inc_vs_rot_err1.jpeg)  
 
-### Candidate Point Metrics 
-![num_cand_pts increment vs Location error](imgs/num_cand_pts_vs_loc_err1.jpeg)  
-![num_cand_pts increment vs Location error](imgs/num_cand_pts_vs_rot_err1.jpeg)  
+![roll increment vs Location error](imgs/roll_inc_vs_rot_err1.jpeg)  
