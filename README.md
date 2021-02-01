@@ -2,7 +2,7 @@
 ### Configuring the Workspace  
 1. Clone the pfc_init project into a catkin workspace src directory
 2. Resolve the missing dependencies manually
-    * Ros package dependencies can be found in the full workspace [here](fhttps://github.com/tuckerguen/pfc_init_catkin_ws) 
+    * Ros package dependencies can be found in the full workspace [here](https://github.com/tuckerguen/pfc_init_catkin_ws) 
     * *Note: Do not clone and build directly from the linked workspace above, it is only there for reference*
 ### Running the Simulation
 3. "catkin build" the project, resolve errors
