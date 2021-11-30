@@ -11,11 +11,9 @@ const int kernel_size = 3;
 
 using namespace std;
 
-// constructor
 NeedleImage::NeedleImage(cv::Mat &img) {
 	//Load needle image at path
 	raw = img;
-
 	//preprocess
 	filterRaw();
 }
@@ -25,11 +23,6 @@ void NeedleImage::filterRaw() {
 	// TODO: Use a more robust segmentation method (maybe just use vesselness)
 	// Currently using hsv filtering since it gives the best segmentation right now (although won't generalize well)
 	// and it's not the limiting factor on performance
-//    cv::Mat detected_edges;
-	// Blur the image before edge detection
-//     cv::blur( raw, detected_edges, gauss_filter_size);
-	// // Run canny edge detection
-//     cv::Canny( detected_edges, image, low_threshold, max_low_threshold, kernel_size);
 
 	cv::Mat img_HSV;
 	// convert to HSV
@@ -39,9 +32,4 @@ void NeedleImage::filterRaw() {
 				cv::Scalar(pfc::low_h, pfc::low_s, pfc::low_v),
 				cv::Scalar(pfc::high_h, pfc::high_s, pfc::high_v),
 				image);
-
-	// Display image for debugging
-//     cv::namedWindow("edge detected");
-//     cv::imshow("edge detected",image);
-//     cv::waitKey(0);
 }

@@ -10,8 +10,6 @@ using namespace std;
 
 /**
  *  @brief Represents location and orientation pose of the needle
- * 
- *  @todo is there a reason we chose to use opencv and eigen as opposed to one or the other?
  */
 class NeedlePose {
  private:
@@ -78,8 +76,6 @@ class NeedlePose {
 
   /**
    * @brief Prints summary of pose to console
-   *
-   * @todo maybe change to toString() and allow user to print it
    */
   void print();
 };

@@ -7,7 +7,8 @@ using namespace std;
 void TemplateMatch::printMatchSummary(const string& name)
 {
     // Compact Print
-    printf("%s: [BB:(%d,%d,%d,%d), (r,p,y)=(%f,%f,%f)]\n", name.c_str(), rect.x, rect.y, rect.width, rect.height, getAngleDegrees()[0], getAngleDegrees()[1], getAngleDegrees()[2]);
+    printf("%s: [BB:(%d,%d,%d,%d), (r,p,y)=(%f,%f,%f)]\n", name.c_str(), rect.x, rect.y, rect.width, rect.height,
+		   getAngleDegrees()[0], getAngleDegrees()[1], getAngleDegrees()[2]);
 }
 
 // Draws the match bounding rectangle on the image

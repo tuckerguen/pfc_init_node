@@ -155,7 +155,7 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose) {
 	}
 
 	// Sort results
-//	std::sort(poses.begin(), poses.end());
+	std::sort(poses.begin(), poses.end());
 
 	for (const auto &pose : poses) {
 		// Add time
@@ -164,26 +164,23 @@ vector<string> PfcInitializer::getResultsAsVector(NeedlePose true_pose) {
 		results.push_back(to_string(pose.loc_err));
 		results.push_back(to_string(pose.rot_err));
 
-		// Use if need more than errors
-		// Must update format of the csv in pfc_init_node.cpp
-		//Add location guess
-		// results.push_back(to_string(pose.location.x));
-		// results.push_back(to_string(pose.location.y));
-		// results.push_back(to_string(pose.location.z));
+		results.push_back(to_string(pose.location.x));
+		results.push_back(to_string(pose.location.y));
+		results.push_back(to_string(pose.location.z));
 
-		// //Add orientation guess
-		// //Quaternion
-		// Eigen::Quaterniond q = pose.getQuaternionOrientation();
-		// results.push_back(to_string(q.x()));
-		// results.push_back(to_string(q.y()));
-		// results.push_back(to_string(q.z()));
-		// results.push_back(to_string(q.w()));
+		//Add orientation guess
+		//Quaternion
+		Eigen::Quaterniond q = pose.getQuaternionOrientation();
+		results.push_back(to_string(q.x()));
+		results.push_back(to_string(q.y()));
+		results.push_back(to_string(q.z()));
+		results.push_back(to_string(q.w()));
 
-		//Euler Angles orientation guess
-		// Eigen::Vector3d e = pose.getEulerAngleOrientation();
-		// results.at(i).push_back(to_string(e.x()));
-		// results.at(i).push_back(to_string(e.y()));
-		// results.at(i).push_back(to_string(e.z()));
+		// Euler Angles orientation guess
+		Eigen::Vector3d e = pose.getEulerAngleOrientation();
+		results.at(i).push_back(to_string(e.x()));
+		results.at(i).push_back(to_string(e.y()));
+		results.at(i).push_back(to_string(e.z()));
 
 	}
 

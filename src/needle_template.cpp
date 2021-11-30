@@ -22,6 +22,7 @@ void NeedleTemplate::GenerateTemplate(double z, double r, double p, double y) {
 		);
 
 	// To determine bounding box of needle for cropping
+	// Defaults are max resolution of DaVinci endoscopes (640x480)
 	double leftmost = 640, rightmost = 0, upmost = 480, downmost = 0;
 	double buffer = 5;
 
@@ -80,17 +81,6 @@ void NeedleTemplate::GenerateTemplate(double z, double r, double p, double y) {
 	//Adjust origin to be relative to new size
 	origin.x -= leftmost;
 	origin.y -= upmost;
-
-	// TODO: Better way to make template compatible with edge detection?
-	// cv::Mat detected_edges;
-	// // Blur the image before edge detection
-	// cv::blur( templ, detected_edges,  cv::Size(3,3) );
-	// // Run canny edge detection
-	// cv::Canny( detected_edges, image, 40, 120, 3);
-
-	// cout << z << ", " << pfc::rad2deg*r << ", " << pfc::rad2deg*p << ", " << pfc::rad2deg*r << endl;
-//     cv::namedWindow("templ" + to_string(y)+ to_string(p)+ to_string(r));
-//     cv::imshow("templ" + to_string(y)+ to_string(p)+ to_string(r), image);
 }
 
 cv::Point2d CalcUVPoint(const cv::Mat &p, const cv::Mat &transform, const cv::Mat &projection) {

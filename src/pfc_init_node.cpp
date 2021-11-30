@@ -60,6 +60,7 @@ void CB_cam_l(const sensor_msgs::ImageConstPtr &i) {
 		ROS_ERROR("Could not convert from '%s' to 'bgr8'.", i->encoding.c_str());
 	}
 }
+
 void CB_cam_r(const sensor_msgs::ImageConstPtr &i) {
 	try {
 		cv::Mat src = cv_bridge::toCvShare(i, sensor_msgs::image_encodings::BGR8)->image;
@@ -80,8 +81,8 @@ float rng(float min, float max) {
 vector<vector<string>> create_csv_vec(int num_cand_pts) {
 	vector<string> csv_key_base
 		{
-			"time", "loc_err", "rot_err"
-			//, "est_loc_x", "est_loc_y", "est_loc_z", "est_rot_x", "est_rot_y", "est_rot_z", "est_rot_w",
+			"time", "loc_err", "rot_err", "est_loc_x", "est_loc_y", "est_loc_z",
+			"est_rot_x", "est_rot_y", "est_rot_z", "est_rot_w",
 		};
 	vector<string> csv_key
 		{
@@ -121,15 +122,16 @@ vector<geometry_msgs::Pose> generate_poses(int num_poses, pose_bounds pb, vector
 		geometry_msgs::Pose test_pose;
 		test_pose.position.x = rng(pb.xmin, pb.xmax);
 		test_pose.position.y = rng(pb.ymin, pb.ymax);
-//		test_pose.position.z = rng(pb.zmin, pb.zmax);
+		test_pose.position.z = rng(pb.zmin, pb.zmax);
 		test_pose.position.z = 0.12;
 
-		//		//http://planning.cs.uiuc.edu/node198.html
-		//		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
-		//		test_pose.orientation.y = sqrt(1 - u)*cos(2*M_PI*v);
-		//		test_pose.orientation.z = sqrt(u)*sin(2*M_PI*w);
-		//		test_pose.orientation.w = sqrt(u)*cos(2*M_PI*w);
-		//		test_pose.orientation.x = sqrt(1 - u)*sin(2*M_PI*v);
+		//http://planning.cs.uiuc.edu/node198.html
+		// Alternative quaternion based random orientation generator
+//		float u = rng(0, 1), v = rng(0, 1), w = rng(0, 1);
+//		test_pose.orientation.y = sqrt(1 - u)*cos(2*M_PI*v);
+//		test_pose.orientation.z = sqrt(u)*sin(2*M_PI*w);
+//		test_pose.orientation.w = sqrt(u)*cos(2*M_PI*w);
+//		test_pose.orientation.x = sqrt(1 - u)*sin(2*M_PI*v);
 
 		// Generate random rpy values from -pi/2 to pi/2
 		Eigen::Quaterniond q;
@@ -308,7 +310,8 @@ int main(int argc, char **argv) {
 	vector<geometry_msgs::Pose> poses = generate_poses(num_poses, pb, axes);
 
 	// Run and collect data
-	vector<vector<string>> all_results = run_on_poses(max_cand_pts, num_poses, poses, &nh, P_l, P_r, csv_base, false, false);
+	vector<vector<string>>
+		all_results = run_on_poses(max_cand_pts, num_poses, poses, &nh, P_l, P_r, csv_base, false, false);
 
 	writeDataListToCSV(all_results, time);
 

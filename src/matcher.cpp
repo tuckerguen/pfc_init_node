@@ -36,20 +36,16 @@ vector<TemplateMatch> match(const cv::Mat &img, NeedleTemplate templ) {
 	vector<TemplateMatch> matches;
 
 	// For all z
-	double z = min_z;
-	while (z < max_z) {
+	for (double z = min_z; z < max_z; z += z_inc) {
 		auto tz = (double)cv::getTickCount();
-		// Fpr all yaw (y values)
-		double y = min_y;
-		while (y < max_y) {
+		// For all yaw (y values)
+		for (double y = min_y; y < max_y; y += y_inc) {
 			auto ta = (double)cv::getTickCount();
 			//For all pitch (p values)
-			double p = min_p;
-			while (p < max_p) {
+			while (double p = min_p; p < max_p; p += p_inc) {
 				auto tb = (double)cv::getTickCount();
 				// For all roll (r values)
-				double r = min_r;
-				while (r < max_r) {
+				while (double r = min_r; r < max_r; r += r_inx) {
 					// Generate Template
 					templ.GenerateTemplate(z, y, p, r);
 					//Match rotated template to image
@@ -63,24 +59,11 @@ vector<TemplateMatch> match(const cv::Mat &img, NeedleTemplate templ) {
 					// Offset the origin to sit in the correct location of the final image
 					new_match.origin = templ.origin + cv::Point2d(new_match.rect.x, new_match.rect.y);
 					matches.push_back(new_match);
-
-					r += r_inc;
 				}
-				// tb = ((double)cv::getTickCount() - tb) / cv::getTickFrequency();
-				// cout << "p step time: " << tb << " s" << endl;
-				p += p_inc;
 			}
-			// ta = ((double)cv::getTickCount() - ta) / cv::getTickFrequency();
-			// cout << "y step time: " << ta << " s" << endl;
-			y += y_inc;
 		}
-		// tz = ((double)cv::getTickCount() - tz) / cv::getTickFrequency();
-		// cout << "Z step time: " << tz << " s" << endl;
-		z += z_inc;
 	}
 
-	// t = ((double)cv::getTickCount() - t) / cv::getTickFrequency();
-	// cout << "thread time: " << t << " s" << endl;
 	return matches;
 }
 
@@ -113,12 +96,10 @@ vector<TemplateMatch> matchThreaded(const cv::Mat &img, NeedleTemplate templ) {
 		cout << templ.params.min_pitch << endl;
 
 		// Account for edge case max_pitch / num_threads == pitch_inc, threads do nothing
+		templ.params.max_pitch = min_val + (tid + 1)*thread_inc;
 		if (max_val/(double)num_threads==inc_val)
-			templ.params.max_pitch = min_val + (tid + 1)*thread_inc + 0.0001;
-		else
-			templ.params.max_pitch = min_val + (tid + 1)*thread_inc;
+			templ.params.max_pitch += 0.0001;
 
-		cout << templ.params.max_pitch << endl;
 		// Round to correct decimal place (this rounds to 2 places, only works
 		// for increments of 2 decimal place as well)
 		templ.params.min_pitch = round(templ.params.min_pitch*100)/100;
@@ -131,7 +112,6 @@ vector<TemplateMatch> matchThreaded(const cv::Mat &img, NeedleTemplate templ) {
 
 		// Launch thread and collect future
 		futures.push_back(std::async(launch::async, match, img, templ));
-		// cout << "launched: " << tid << " range: " << templ.params.min_yaw << ", " << templ.params.max_yaw << endl;
 	}
 
 
@@ -161,8 +141,6 @@ vector<TemplateMatch> collect_top_matches(vector<TemplateMatch> matches, int num
 			// Add the new better match
 			best_matches.push(m);
 		}
-//		cout << m.score << endl;
-//		cout << "worst score: " << best_matches.top().score << endl;
 		// Otherwise reject the match since it isn't in the top n scores
 	}
 	return pq_to_vector(best_matches);
@@ -197,76 +175,3 @@ TemplateMatch getMatch(const cv::Mat &img, const cv::Mat &templ) {
 
 	return match;
 }
-
-
-
-/**
- * These methods were prototyping for a different scoring method
- */
-//double match_rot_dist(const TemplateMatch *m1, const TemplateMatch *m2) {
-//	Eigen::Vector4d orientation1(m1->roll, m1->pitch, m1->yaw, m1->z);
-//	Eigen::Vector4d orientation2(m2->roll, m2->pitch, m2->yaw, m2->z);
-//	cout << orientation1 << endl;
-//	cout << orientation2 << endl;
-//	return (orientation1 - orientation2).norm();
-//}
-//
-//bool match_too_close(TemplateMatch *new_match, const vector<TemplateMatch> *matches) {
-//	for (int i = 0; i < matches->size(); i++) {
-//		TemplateMatch m = matches->at(i);
-//		double dist = match_rot_dist(new_match, &m);
-//		if (dist < pfc::match_dist_thresh) {
-//			return true;
-//		}
-//	}
-//	return false;
-//}
-//
-//void set_min_score(vector<TemplateMatch> *matches, double *min_score, int *min_idx) {
-//	for (int i = 0; i < matches->size(); i++) {
-//		auto m = matches->at(i);
-//		if (m.score < *min_score) {
-//			min_score = &m.score;
-//			min_idx = &i;
-//		}
-//	}
-//}
-//
-//vector<TemplateMatch> select_top_matches(vector<TemplateMatch> *matches, int num_cand_pts) {
-//	vector<TemplateMatch> best_matches;
-//	best_matches.push_back(matches->at(0));
-//	// Track min score and index
-//	auto min_score = matches->at(0).score;
-//	int min_idx = 0;
-//
-//	// Loop over all matches
-//	for (TemplateMatch match : *matches) {
-//		double score = match.score; // matching score
-//
-//		// If new score is better than min score
-//		if (score > min_score) {
-//			// Save the min
-//			TemplateMatch prev_min = best_matches.at(min_idx);
-//
-//			// If reached desired num of pts, remove the min before distance comparison
-//			// Since the new match has a better matching score, even if it's too close to the min then
-//			// it should replace the min. So we compare distance on list without the current min
-//			if (best_matches.size() >= num_cand_pts) {
-//				best_matches.erase(best_matches.begin() + min_idx - 1);
-//			}
-//
-//			// If point not too close to any others already in list
-//			if (!match_too_close(&match, &best_matches)) {
-//				// Add it, find new min
-//				best_matches.push_back(match);
-//				set_min_score(&best_matches, &min_score, &min_idx);
-//			} else {
-//				// If too close to any pts, add the old min (that wasn't too close) back in
-//				if(best_matches.size() != 1)  // avoid duplicating first entry
-//					best_matches.push_back(prev_min);
-//				min_score = prev_min.score;
-//				min_idx = best_matches.size() - 1;
-//			}
-//		}
-//	}
-//}
