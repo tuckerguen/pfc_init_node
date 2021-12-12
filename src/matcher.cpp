@@ -37,15 +37,12 @@ vector<TemplateMatch> match(const cv::Mat &img, NeedleTemplate templ) {
 
 	// For all z
 	for (double z = min_z; z < max_z; z += z_inc) {
-		auto tz = (double)cv::getTickCount();
 		// For all yaw (y values)
 		for (double y = min_y; y < max_y; y += y_inc) {
-			auto ta = (double)cv::getTickCount();
 			//For all pitch (p values)
-			while (double p = min_p; p < max_p; p += p_inc) {
-				auto tb = (double)cv::getTickCount();
+			for (double p = min_p; p < max_p; p += p_inc) {
 				// For all roll (r values)
-				while (double r = min_r; r < max_r; r += r_inx) {
+				for (double r = min_r; r < max_r; r += r_inx) {
 					// Generate Template
 					templ.GenerateTemplate(z, y, p, r);
 					//Match rotated template to image
@@ -56,6 +53,7 @@ vector<TemplateMatch> match(const cv::Mat &img, NeedleTemplate templ) {
 					new_match.yaw = constrainAngle(y, false);
 					new_match.pitch = constrainAngle(p, false);
 					new_match.roll = constrainAngle(r, false);
+					
 					// Offset the origin to sit in the correct location of the final image
 					new_match.origin = templ.origin + cv::Point2d(new_match.rect.x, new_match.rect.y);
 					matches.push_back(new_match);
